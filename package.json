@@ -5,10 +5,19 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
+    "prepublishOnly": "npm run build",
     "test": "vitest run",
     "test:contract": "vitest run --config __tests__/contract/vitest.contract.config.ts"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/archastro/archastro-js.git"
   },
   "dependencies": {
     "ws": "^8.17.0",
