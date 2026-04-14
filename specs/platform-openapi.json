@@ -1664,6 +1664,28 @@
         ],
         "type": "object"
       },
+      "BillingPlan": {
+        "description": "Schema for a billing plan.",
+        "properties": {
+          "description": {
+            "description": "Plan description",
+            "type": "string"
+          },
+          "id": {
+            "description": "Plan identifier (e.g. paygo)",
+            "type": "string"
+          },
+          "name": {
+            "description": "Human-readable plan name",
+            "type": "string"
+          },
+          "target": {
+            "description": "Entity type this plan applies to (developer or org)",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "EvalTask": {
         "description": "Schema for an eval task.",
         "properties": {
@@ -4092,6 +4114,10 @@
           "billing_provider_id": {
             "description": "Stripe customer ID",
             "type": "string"
+          },
+          "plan": {
+            "description": "Billing plan (e.g. paygo)",
+            "type": "string"
           }
         },
         "type": "object"
@@ -5861,6 +5887,10 @@
           },
           "billing_provider_id": {
             "description": "Stripe customer ID",
+            "type": "string"
+          },
+          "plan": {
+            "description": "Billing plan (e.g. enterprise-pilot)",
             "type": "string"
           },
           "primary_user": {
