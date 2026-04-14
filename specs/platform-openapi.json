@@ -72,7 +72,7 @@
           "participants": {
             "description": "Participant user objects",
             "items": {
-              "type": "object"
+              "$ref": "#/components/schemas/User"
             },
             "type": "array"
           },
@@ -86,7 +86,7 @@
           "participating_agents": {
             "description": "Agents participating in thread",
             "items": {
-              "type": "object"
+              "$ref": "#/components/schemas/Agent"
             },
             "type": "array"
           },
@@ -99,8 +99,8 @@
             "type": "string"
           },
           "settings": {
-            "description": "Thread settings",
-            "type": "object"
+            "$ref": "#/components/schemas/ThreadSettings",
+            "description": "Thread settings"
           },
           "slug": {
             "description": "Thread slug",
@@ -786,6 +786,27 @@
         ],
         "type": "object"
       },
+      "AgentExport": {
+        "description": "API schema for an agent export response.\n\nContains the reconstructed AgentTemplate and all dependent config files\nneeded for a fully self-contained re-deploy.\n",
+        "properties": {
+          "configs": {
+            "description": "Dependent config files",
+            "items": {
+              "$ref": "#/components/schemas/Config"
+            },
+            "type": "array"
+          },
+          "template": {
+            "description": "AgentTemplate config object",
+            "type": "object"
+          }
+        },
+        "required": [
+          "template",
+          "configs"
+        ],
+        "type": "object"
+      },
       "WebhookEvent": {
         "description": "Schema for a webhook event.\n\nMaps to serialized webhook event output from developer portal API.\n",
         "properties": {
@@ -880,7 +901,7 @@
           "results": {
             "description": "Eval results for this run",
             "items": {
-              "type": "object"
+              "$ref": "#/components/schemas/EvalResult"
             },
             "type": "array"
           },
@@ -1398,8 +1419,8 @@
             "description": "Base64 encoded profile picture"
           },
           "settings": {
-            "description": "Thread settings",
-            "type": "object"
+            "$ref": "#/components/schemas/ThreadSettings",
+            "description": "Thread settings"
           },
           "title": {
             "description": "Thread title",
@@ -1983,8 +2004,8 @@
             "type": "string"
           },
           "image_source": {
-            "description": "Image source metadata",
-            "type": "object"
+            "$ref": "#/components/schemas/ImageSource",
+            "description": "Image source metadata"
           },
           "updated_at": {
             "description": "Last update timestamp",
@@ -2240,7 +2261,7 @@
           "tasks": {
             "description": "Eval tasks included in the suite",
             "items": {
-              "type": "object"
+              "$ref": "#/components/schemas/EvalTask"
             },
             "type": "array"
           },
@@ -2712,7 +2733,7 @@
           "variants": {
             "description": "Media variants (media type)",
             "items": {
-              "type": "object"
+              "$ref": "#/components/schemas/MediaVariant"
             },
             "type": "array"
           },
@@ -3400,7 +3421,7 @@
           "messages": {
             "description": "List of message objects",
             "items": {
-              "type": "object"
+              "$ref": "#/components/schemas/Message"
             },
             "type": "array"
           }
@@ -3658,8 +3679,8 @@
         "description": "API schema for a team membership.",
         "properties": {
           "agent": {
-            "description": "Agent object (when loaded)",
-            "type": "object"
+            "$ref": "#/components/schemas/Agent",
+            "description": "Agent object (when loaded)"
           },
           "created_at": {
             "description": "Creation timestamp",
@@ -3684,8 +3705,8 @@
             "type": "string"
           },
           "profile_picture": {
-            "description": "Profile picture",
-            "type": "object"
+            "$ref": "#/components/schemas/ImageSource",
+            "description": "Profile picture"
           },
           "role": {
             "description": "Role in team",
@@ -3705,8 +3726,8 @@
             "type": "string"
           },
           "user": {
-            "description": "User object (when loaded)",
-            "type": "object"
+            "$ref": "#/components/schemas/User",
+            "description": "User object (when loaded)"
           }
         },
         "required": [
@@ -3848,8 +3869,8 @@
         "description": "API schema for a chat member (user or agent).",
         "properties": {
           "agent": {
-            "description": "Agent object (for agent members)",
-            "type": "object"
+            "$ref": "#/components/schemas/Agent",
+            "description": "Agent object (for agent members)"
           },
           "membership_type": {
             "description": "Membership type",
@@ -3860,8 +3881,8 @@
             "type": "string"
           },
           "user": {
-            "description": "User object (for user members)",
-            "type": "object"
+            "$ref": "#/components/schemas/User",
+            "description": "User object (for user members)"
           }
         },
         "required": [
@@ -4734,8 +4755,8 @@
             "type": "string"
           },
           "user": {
-            "description": "Invite creator",
-            "type": "object"
+            "$ref": "#/components/schemas/User",
+            "description": "Invite creator"
           }
         },
         "required": [
@@ -5159,8 +5180,8 @@
             "type": "string"
           },
           "image_source": {
-            "description": "Image source metadata",
-            "type": "object"
+            "$ref": "#/components/schemas/ImageSource",
+            "description": "Image source metadata"
           },
           "updated_at": {
             "description": "Last update timestamp",
@@ -5258,8 +5279,8 @@
             "type": "string"
           },
           "image_source": {
-            "description": "Image source metadata",
-            "type": "object"
+            "$ref": "#/components/schemas/ImageSource",
+            "description": "Image source metadata"
           },
           "name": {
             "description": "Artifact name",
@@ -5855,7 +5876,7 @@
           "actors": {
             "description": "Message actors",
             "items": {
-              "type": "object"
+              "$ref": "#/components/schemas/Actor"
             },
             "type": "array"
           },
@@ -5866,7 +5887,7 @@
           "attachments": {
             "description": "Message attachments",
             "items": {
-              "type": "object"
+              "$ref": "#/components/schemas/Attachment"
             },
             "type": "array"
           },
@@ -5910,7 +5931,7 @@
           "reactions": {
             "description": "Message reactions",
             "items": {
-              "type": "object"
+              "$ref": "#/components/schemas/MessageReaction"
             },
             "type": "array"
           },
@@ -6015,7 +6036,7 @@
           "variants": {
             "description": "Media variants",
             "items": {
-              "type": "object"
+              "$ref": "#/components/schemas/MediaVariant"
             },
             "type": "array"
           },
@@ -6294,8 +6315,8 @@
             "type": "string"
           },
           "image_source": {
-            "description": "Image source metadata",
-            "type": "object"
+            "$ref": "#/components/schemas/ImageSource",
+            "description": "Image source metadata"
           },
           "org": {
             "description": "Organization",
@@ -8871,6 +8892,36 @@
                           },
                           "image_source": {
                             "description": "Image source metadata",
+                            "properties": {
+                              "file": {
+                                "description": "Storage file",
+                                "type": "string"
+                              },
+                              "height": {
+                                "description": "Image height in pixels",
+                                "type": "integer"
+                              },
+                              "media": {
+                                "description": "Media",
+                                "type": "string"
+                              },
+                              "mime_type": {
+                                "description": "Image MIME type",
+                                "type": "string"
+                              },
+                              "refresh_url": {
+                                "description": "URL to refresh signed URL",
+                                "type": "string"
+                              },
+                              "url": {
+                                "description": "Image URL",
+                                "type": "string"
+                              },
+                              "width": {
+                                "description": "Image width in pixels",
+                                "type": "integer"
+                              }
+                            },
                             "type": "object"
                           },
                           "name": {
@@ -9062,6 +9113,158 @@
                         "properties": {
                           "agent": {
                             "description": "Agent object (when loaded)",
+                            "properties": {
+                              "acl": {
+                                "description": "Access control list. Contains grants array with principal_type, principal, and actions. Null when no ACL restrictions are applied.",
+                                "properties": {
+                                  "add": {
+                                    "description": "Patch mode: grants to add or merge into existing",
+                                    "items": {
+                                      "description": "API schema for a single ACL grant entry.",
+                                      "properties": {
+                                        "actions": {
+                                          "description": "List of allowed actions (e.g. read, write)",
+                                          "items": {
+                                            "type": "string"
+                                          },
+                                          "type": "array"
+                                        },
+                                        "principal": {
+                                          "description": "Principal identifier (UUID for user/team/org/agent_user, role name for org_role, omit for everyone)",
+                                          "type": "string"
+                                        },
+                                        "principal_type": {
+                                          "description": "Principal type: user, team, org, org_role, agent, or everyone",
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "principal_type",
+                                        "actions"
+                                      ],
+                                      "type": "object"
+                                    },
+                                    "type": "array"
+                                  },
+                                  "grants": {
+                                    "description": "Replace mode: full list of grants (replaces all existing). Use [] to clear.",
+                                    "items": {
+                                      "description": "API schema for a single ACL grant entry.",
+                                      "properties": {
+                                        "actions": {
+                                          "description": "List of allowed actions (e.g. read, write)",
+                                          "items": {
+                                            "type": "string"
+                                          },
+                                          "type": "array"
+                                        },
+                                        "principal": {
+                                          "description": "Principal identifier (UUID for user/team/org/agent_user, role name for org_role, omit for everyone)",
+                                          "type": "string"
+                                        },
+                                        "principal_type": {
+                                          "description": "Principal type: user, team, org, org_role, agent, or everyone",
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "principal_type",
+                                        "actions"
+                                      ],
+                                      "type": "object"
+                                    },
+                                    "type": "array"
+                                  },
+                                  "remove": {
+                                    "description": "Patch mode: principals to remove from existing",
+                                    "items": {
+                                      "description": "API schema for identifying a principal to remove from an ACL.",
+                                      "properties": {
+                                        "principal": {
+                                          "description": "Principal identifier to remove (omit for everyone)",
+                                          "type": "string"
+                                        },
+                                        "principal_type": {
+                                          "description": "Principal type to remove",
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "principal_type"
+                                      ],
+                                      "type": "object"
+                                    },
+                                    "type": "array"
+                                  }
+                                },
+                                "type": "object"
+                              },
+                              "app": {
+                                "description": "Application",
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "description": "Creation timestamp",
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "default_model": {
+                                "description": "Default AI model",
+                                "type": "string"
+                              },
+                              "email": {
+                                "description": "Agent email",
+                                "type": "string"
+                              },
+                              "id": {
+                                "description": "Agent ID (agi_...)",
+                                "type": "string"
+                              },
+                              "identity": {
+                                "description": "Identity prompt",
+                                "type": "string"
+                              },
+                              "lookup_key": {
+                                "description": "Unique lookup key",
+                                "type": "string"
+                              },
+                              "metadata": {
+                                "description": "Arbitrary metadata",
+                                "type": "object"
+                              },
+                              "name": {
+                                "description": "Agent name",
+                                "type": "string"
+                              },
+                              "org": {
+                                "description": "Organization",
+                                "type": "string"
+                              },
+                              "phone_number": {
+                                "description": "Agent phone number",
+                                "type": "string"
+                              },
+                              "sandbox": {
+                                "description": "Sandbox",
+                                "type": "string"
+                              },
+                              "team": {
+                                "description": "Owning team",
+                                "type": "string"
+                              },
+                              "updated_at": {
+                                "description": "Last update timestamp",
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "user": {
+                                "description": "Owning user",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id"
+                            ],
                             "type": "object"
                           },
                           "created_at": {
@@ -9088,6 +9291,36 @@
                           },
                           "profile_picture": {
                             "description": "Profile picture",
+                            "properties": {
+                              "file": {
+                                "description": "Storage file",
+                                "type": "string"
+                              },
+                              "height": {
+                                "description": "Image height in pixels",
+                                "type": "integer"
+                              },
+                              "media": {
+                                "description": "Media",
+                                "type": "string"
+                              },
+                              "mime_type": {
+                                "description": "Image MIME type",
+                                "type": "string"
+                              },
+                              "refresh_url": {
+                                "description": "URL to refresh signed URL",
+                                "type": "string"
+                              },
+                              "url": {
+                                "description": "Image URL",
+                                "type": "string"
+                              },
+                              "width": {
+                                "description": "Image width in pixels",
+                                "type": "integer"
+                              }
+                            },
                             "type": "object"
                           },
                           "role": {
@@ -9109,6 +9342,39 @@
                           },
                           "user": {
                             "description": "User object (when loaded)",
+                            "properties": {
+                              "alias": {
+                                "description": "User alias/handle",
+                                "type": "string"
+                              },
+                              "email": {
+                                "description": "User email address",
+                                "type": "string"
+                              },
+                              "id": {
+                                "description": "User ID",
+                                "type": "string"
+                              },
+                              "metadata": {
+                                "description": "User metadata",
+                                "type": "object"
+                              },
+                              "name": {
+                                "description": "User display name",
+                                "type": "string"
+                              },
+                              "org": {
+                                "description": "Organization",
+                                "type": "string"
+                              },
+                              "sandbox": {
+                                "description": "Sandbox",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id"
+                            ],
                             "type": "object"
                           }
                         },
@@ -10649,6 +10915,49 @@
         ],
         "x-auth": [
           "publishable_key"
+        ]
+      }
+    },
+    "/api/v1/agents/{agent}/export": {
+      "get": {
+        "description": "Reconstructs an AgentTemplate config from a deployed agent and its sub-resources\n(tools, routines, skills, installations). Returns the template plus all dependent\nconfig files (scripts, workflows, skills, schemas) with their raw content for a\nfully self-contained export.\n",
+        "operationId": "get_api_v1_agents__agent_export",
+        "parameters": [
+          {
+            "description": "Agent ID or lookup_key",
+            "in": "path",
+            "name": "agent",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentExport"
+                }
+              }
+            },
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - app scope required"
+          },
+          "404": {
+            "description": "Agent not found"
+          }
+        },
+        "summary": "Export agent as AgentTemplate",
+        "x-auth": [
+          "publishable_key",
+          "bearer"
         ]
       }
     },
@@ -12504,6 +12813,36 @@
                           },
                           "image_source": {
                             "description": "Image source metadata",
+                            "properties": {
+                              "file": {
+                                "description": "Storage file",
+                                "type": "string"
+                              },
+                              "height": {
+                                "description": "Image height in pixels",
+                                "type": "integer"
+                              },
+                              "media": {
+                                "description": "Media",
+                                "type": "string"
+                              },
+                              "mime_type": {
+                                "description": "Image MIME type",
+                                "type": "string"
+                              },
+                              "refresh_url": {
+                                "description": "URL to refresh signed URL",
+                                "type": "string"
+                              },
+                              "url": {
+                                "description": "Image URL",
+                                "type": "string"
+                              },
+                              "width": {
+                                "description": "Image width in pixels",
+                                "type": "integer"
+                              }
+                            },
                             "type": "object"
                           },
                           "name": {
@@ -13698,6 +14037,378 @@
                         "messages": {
                           "description": "List of message objects",
                           "items": {
+                            "description": "API schema for a chat message.",
+                            "properties": {
+                              "actors": {
+                                "description": "Message actors",
+                                "items": {
+                                  "description": "Schema for a message actor (user or agent).\n\nActors represent the entity that sent a message.\nMaps to the actor format from MessageActorHelper.build_actor/1.\n",
+                                  "properties": {
+                                    "alias": {
+                                      "description": "Actor alias/handle",
+                                      "type": "string"
+                                    },
+                                    "id": {
+                                      "description": "Actor ID (format: user-xxx or agent-xxx)",
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "description": "Actor display name",
+                                      "type": "string"
+                                    },
+                                    "profile_picture": {
+                                      "description": "Profile picture",
+                                      "properties": {
+                                        "file": {
+                                          "description": "Storage file",
+                                          "type": "string"
+                                        },
+                                        "height": {
+                                          "description": "Image height in pixels",
+                                          "type": "integer"
+                                        },
+                                        "media": {
+                                          "description": "Media",
+                                          "type": "string"
+                                        },
+                                        "mime_type": {
+                                          "description": "Image MIME type",
+                                          "type": "string"
+                                        },
+                                        "refresh_url": {
+                                          "description": "URL to refresh signed URL",
+                                          "type": "string"
+                                        },
+                                        "url": {
+                                          "description": "Image URL",
+                                          "type": "string"
+                                        },
+                                        "width": {
+                                          "description": "Image width in pixels",
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "type": "object"
+                                    }
+                                  },
+                                  "type": "object"
+                                },
+                                "type": "array"
+                              },
+                              "agent": {
+                                "description": "Agent if sent by an agent user",
+                                "type": "string"
+                              },
+                              "attachments": {
+                                "description": "Message attachments",
+                                "items": {
+                                  "description": "Schema for a message attachment.\n\nAttachments can be of various types (file, scraped_link, artifact, task, media, action).\nFields present depend on the attachment type.\nMaps to format_attachments_for_client/1 output.\n",
+                                  "properties": {
+                                    "content_type": {
+                                      "description": "MIME content type (file, artifact, media types)",
+                                      "type": "string"
+                                    },
+                                    "description": {
+                                      "description": "Description (scraped_link, artifact, task types)",
+                                      "type": "string"
+                                    },
+                                    "filename": {
+                                      "description": "File name (file, artifact, media types)",
+                                      "type": "string"
+                                    },
+                                    "height": {
+                                      "description": "Media height (media type)",
+                                      "type": "integer"
+                                    },
+                                    "id": {
+                                      "description": "Attachment ID",
+                                      "type": "string"
+                                    },
+                                    "image_height": {
+                                      "description": "Preview image height (scraped_link type)",
+                                      "type": "integer"
+                                    },
+                                    "image_source": {
+                                      "description": "Image metadata (file, scraped_link, artifact, media types)",
+                                      "properties": {
+                                        "file": {
+                                          "description": "Storage file",
+                                          "type": "string"
+                                        },
+                                        "height": {
+                                          "description": "Image height in pixels",
+                                          "type": "integer"
+                                        },
+                                        "media": {
+                                          "description": "Media",
+                                          "type": "string"
+                                        },
+                                        "mime_type": {
+                                          "description": "Image MIME type",
+                                          "type": "string"
+                                        },
+                                        "refresh_url": {
+                                          "description": "URL to refresh signed URL",
+                                          "type": "string"
+                                        },
+                                        "url": {
+                                          "description": "Image URL",
+                                          "type": "string"
+                                        },
+                                        "width": {
+                                          "description": "Image width in pixels",
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "type": "object"
+                                    },
+                                    "image_url": {
+                                      "description": "Preview image URL (scraped_link type)",
+                                      "type": "string"
+                                    },
+                                    "image_width": {
+                                      "description": "Preview image width (scraped_link type)",
+                                      "type": "integer"
+                                    },
+                                    "media_type": {
+                                      "description": "Media type (media type)",
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "description": "Media name (media type)",
+                                      "type": "string"
+                                    },
+                                    "object": {
+                                      "description": "Embedded object (task, action types)",
+                                      "type": "object"
+                                    },
+                                    "title": {
+                                      "description": "Title (scraped_link, artifact, task types)",
+                                      "type": "string"
+                                    },
+                                    "type": {
+                                      "description": "Attachment type: file, scraped_link, artifact, task, media, action",
+                                      "type": "string"
+                                    },
+                                    "url": {
+                                      "description": "URL to the resource (file, scraped_link, artifact, media types)",
+                                      "type": "string"
+                                    },
+                                    "variants": {
+                                      "description": "Media variants (media type)",
+                                      "items": {
+                                        "description": "API schema for a media variant.",
+                                        "properties": {
+                                          "content_type": {
+                                            "description": "File content type",
+                                            "type": "string"
+                                          },
+                                          "created_at": {
+                                            "description": "Creation timestamp",
+                                            "format": "date-time",
+                                            "type": "string"
+                                          },
+                                          "file": {
+                                            "description": "Storage file",
+                                            "type": "string"
+                                          },
+                                          "filename": {
+                                            "description": "Original filename",
+                                            "type": "string"
+                                          },
+                                          "height": {
+                                            "description": "Height in pixels",
+                                            "type": "integer"
+                                          },
+                                          "id": {
+                                            "description": "Variant ID",
+                                            "type": "string"
+                                          },
+                                          "image_source": {
+                                            "description": "Image source metadata",
+                                            "properties": {
+                                              "file": {
+                                                "description": "Storage file",
+                                                "type": "string"
+                                              },
+                                              "height": {
+                                                "description": "Image height in pixels",
+                                                "type": "integer"
+                                              },
+                                              "media": {
+                                                "description": "Media",
+                                                "type": "string"
+                                              },
+                                              "mime_type": {
+                                                "description": "Image MIME type",
+                                                "type": "string"
+                                              },
+                                              "refresh_url": {
+                                                "description": "URL to refresh signed URL",
+                                                "type": "string"
+                                              },
+                                              "url": {
+                                                "description": "Image URL",
+                                                "type": "string"
+                                              },
+                                              "width": {
+                                                "description": "Image width in pixels",
+                                                "type": "integer"
+                                              }
+                                            },
+                                            "type": "object"
+                                          },
+                                          "updated_at": {
+                                            "description": "Last update timestamp",
+                                            "format": "date-time",
+                                            "type": "string"
+                                          },
+                                          "url": {
+                                            "description": "Signed download URL",
+                                            "type": "string"
+                                          },
+                                          "variant_key": {
+                                            "description": "Variant key (original, thumbnail, etc)",
+                                            "type": "string"
+                                          },
+                                          "width": {
+                                            "description": "Width in pixels",
+                                            "type": "integer"
+                                          }
+                                        },
+                                        "required": [
+                                          "id"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      "type": "array"
+                                    },
+                                    "version": {
+                                      "description": "Artifact version number (artifact type)",
+                                      "type": "integer"
+                                    },
+                                    "width": {
+                                      "description": "Media width (media type)",
+                                      "type": "integer"
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "type"
+                                  ],
+                                  "type": "object"
+                                },
+                                "type": "array"
+                              },
+                              "branched_thread": {
+                                "description": "Branched thread (if message spawned a thread)",
+                                "type": "string"
+                              },
+                              "content": {
+                                "description": "Message content",
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "description": "Creation timestamp",
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "has_replies": {
+                                "description": "Whether message has replies",
+                                "type": "boolean"
+                              },
+                              "id": {
+                                "description": "Message ID (msg_...)",
+                                "type": "string"
+                              },
+                              "idempotency_key": {
+                                "description": "Client-provided idempotency key",
+                                "type": "string"
+                              },
+                              "legacy_agent": {
+                                "description": "Legacy agent if sent by legacy chat agent",
+                                "type": "string"
+                              },
+                              "metadata": {
+                                "description": "Message metadata",
+                                "type": "object"
+                              },
+                              "org": {
+                                "description": "Organization",
+                                "type": "string"
+                              },
+                              "reactions": {
+                                "description": "Message reactions",
+                                "items": {
+                                  "description": "Schema for inline message reactions.\n\nThis is the compact format used in Message.reactions[], which differs from\nthe full Reaction schema used in standalone reaction endpoints.\nMaps to format_reactions_for_client/1 output.\n",
+                                  "properties": {
+                                    "payload": {
+                                      "description": "Reaction payload (e.g., {emoji: '👍'})",
+                                      "type": "object"
+                                    },
+                                    "type": {
+                                      "description": "Reaction type (e.g., emoji_reaction)",
+                                      "type": "string"
+                                    },
+                                    "user": {
+                                      "description": "User who added the reaction",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "type"
+                                  ],
+                                  "type": "object"
+                                },
+                                "type": "array"
+                              },
+                              "rendering_mode": {
+                                "description": "Rendering mode hint",
+                                "type": "string"
+                              },
+                              "replies": {
+                                "description": "Inline replies (if loaded)",
+                                "items": {
+                                  "type": "object"
+                                },
+                                "type": "array"
+                              },
+                              "replies_after_cursor": {
+                                "description": "Cursor for replies pagination",
+                                "type": "string"
+                              },
+                              "replies_before_cursor": {
+                                "description": "Cursor for replies pagination",
+                                "type": "string"
+                              },
+                              "reply_count": {
+                                "description": "Number of replies",
+                                "type": "integer"
+                              },
+                              "reply_to": {
+                                "description": "Parent message object (if loaded)",
+                                "type": "object"
+                              },
+                              "sandbox": {
+                                "description": "Sandbox identifier",
+                                "type": "string"
+                              },
+                              "team": {
+                                "description": "Team",
+                                "type": "string"
+                              },
+                              "thread": {
+                                "description": "Parent thread",
+                                "type": "string"
+                              },
+                              "user": {
+                                "description": "Author user (public ID or expanded object when loaded)",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id"
+                            ],
                             "type": "object"
                           },
                           "type": "array"
@@ -14524,6 +15235,55 @@
                               "actors": {
                                 "description": "Message actors",
                                 "items": {
+                                  "description": "Schema for a message actor (user or agent).\n\nActors represent the entity that sent a message.\nMaps to the actor format from MessageActorHelper.build_actor/1.\n",
+                                  "properties": {
+                                    "alias": {
+                                      "description": "Actor alias/handle",
+                                      "type": "string"
+                                    },
+                                    "id": {
+                                      "description": "Actor ID (format: user-xxx or agent-xxx)",
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "description": "Actor display name",
+                                      "type": "string"
+                                    },
+                                    "profile_picture": {
+                                      "description": "Profile picture",
+                                      "properties": {
+                                        "file": {
+                                          "description": "Storage file",
+                                          "type": "string"
+                                        },
+                                        "height": {
+                                          "description": "Image height in pixels",
+                                          "type": "integer"
+                                        },
+                                        "media": {
+                                          "description": "Media",
+                                          "type": "string"
+                                        },
+                                        "mime_type": {
+                                          "description": "Image MIME type",
+                                          "type": "string"
+                                        },
+                                        "refresh_url": {
+                                          "description": "URL to refresh signed URL",
+                                          "type": "string"
+                                        },
+                                        "url": {
+                                          "description": "Image URL",
+                                          "type": "string"
+                                        },
+                                        "width": {
+                                          "description": "Image width in pixels",
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "type": "object"
+                                    }
+                                  },
                                   "type": "object"
                                 },
                                 "type": "array"
@@ -14535,6 +15295,200 @@
                               "attachments": {
                                 "description": "Message attachments",
                                 "items": {
+                                  "description": "Schema for a message attachment.\n\nAttachments can be of various types (file, scraped_link, artifact, task, media, action).\nFields present depend on the attachment type.\nMaps to format_attachments_for_client/1 output.\n",
+                                  "properties": {
+                                    "content_type": {
+                                      "description": "MIME content type (file, artifact, media types)",
+                                      "type": "string"
+                                    },
+                                    "description": {
+                                      "description": "Description (scraped_link, artifact, task types)",
+                                      "type": "string"
+                                    },
+                                    "filename": {
+                                      "description": "File name (file, artifact, media types)",
+                                      "type": "string"
+                                    },
+                                    "height": {
+                                      "description": "Media height (media type)",
+                                      "type": "integer"
+                                    },
+                                    "id": {
+                                      "description": "Attachment ID",
+                                      "type": "string"
+                                    },
+                                    "image_height": {
+                                      "description": "Preview image height (scraped_link type)",
+                                      "type": "integer"
+                                    },
+                                    "image_source": {
+                                      "description": "Image metadata (file, scraped_link, artifact, media types)",
+                                      "properties": {
+                                        "file": {
+                                          "description": "Storage file",
+                                          "type": "string"
+                                        },
+                                        "height": {
+                                          "description": "Image height in pixels",
+                                          "type": "integer"
+                                        },
+                                        "media": {
+                                          "description": "Media",
+                                          "type": "string"
+                                        },
+                                        "mime_type": {
+                                          "description": "Image MIME type",
+                                          "type": "string"
+                                        },
+                                        "refresh_url": {
+                                          "description": "URL to refresh signed URL",
+                                          "type": "string"
+                                        },
+                                        "url": {
+                                          "description": "Image URL",
+                                          "type": "string"
+                                        },
+                                        "width": {
+                                          "description": "Image width in pixels",
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "type": "object"
+                                    },
+                                    "image_url": {
+                                      "description": "Preview image URL (scraped_link type)",
+                                      "type": "string"
+                                    },
+                                    "image_width": {
+                                      "description": "Preview image width (scraped_link type)",
+                                      "type": "integer"
+                                    },
+                                    "media_type": {
+                                      "description": "Media type (media type)",
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "description": "Media name (media type)",
+                                      "type": "string"
+                                    },
+                                    "object": {
+                                      "description": "Embedded object (task, action types)",
+                                      "type": "object"
+                                    },
+                                    "title": {
+                                      "description": "Title (scraped_link, artifact, task types)",
+                                      "type": "string"
+                                    },
+                                    "type": {
+                                      "description": "Attachment type: file, scraped_link, artifact, task, media, action",
+                                      "type": "string"
+                                    },
+                                    "url": {
+                                      "description": "URL to the resource (file, scraped_link, artifact, media types)",
+                                      "type": "string"
+                                    },
+                                    "variants": {
+                                      "description": "Media variants (media type)",
+                                      "items": {
+                                        "description": "API schema for a media variant.",
+                                        "properties": {
+                                          "content_type": {
+                                            "description": "File content type",
+                                            "type": "string"
+                                          },
+                                          "created_at": {
+                                            "description": "Creation timestamp",
+                                            "format": "date-time",
+                                            "type": "string"
+                                          },
+                                          "file": {
+                                            "description": "Storage file",
+                                            "type": "string"
+                                          },
+                                          "filename": {
+                                            "description": "Original filename",
+                                            "type": "string"
+                                          },
+                                          "height": {
+                                            "description": "Height in pixels",
+                                            "type": "integer"
+                                          },
+                                          "id": {
+                                            "description": "Variant ID",
+                                            "type": "string"
+                                          },
+                                          "image_source": {
+                                            "description": "Image source metadata",
+                                            "properties": {
+                                              "file": {
+                                                "description": "Storage file",
+                                                "type": "string"
+                                              },
+                                              "height": {
+                                                "description": "Image height in pixels",
+                                                "type": "integer"
+                                              },
+                                              "media": {
+                                                "description": "Media",
+                                                "type": "string"
+                                              },
+                                              "mime_type": {
+                                                "description": "Image MIME type",
+                                                "type": "string"
+                                              },
+                                              "refresh_url": {
+                                                "description": "URL to refresh signed URL",
+                                                "type": "string"
+                                              },
+                                              "url": {
+                                                "description": "Image URL",
+                                                "type": "string"
+                                              },
+                                              "width": {
+                                                "description": "Image width in pixels",
+                                                "type": "integer"
+                                              }
+                                            },
+                                            "type": "object"
+                                          },
+                                          "updated_at": {
+                                            "description": "Last update timestamp",
+                                            "format": "date-time",
+                                            "type": "string"
+                                          },
+                                          "url": {
+                                            "description": "Signed download URL",
+                                            "type": "string"
+                                          },
+                                          "variant_key": {
+                                            "description": "Variant key (original, thumbnail, etc)",
+                                            "type": "string"
+                                          },
+                                          "width": {
+                                            "description": "Width in pixels",
+                                            "type": "integer"
+                                          }
+                                        },
+                                        "required": [
+                                          "id"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      "type": "array"
+                                    },
+                                    "version": {
+                                      "description": "Artifact version number (artifact type)",
+                                      "type": "integer"
+                                    },
+                                    "width": {
+                                      "description": "Media width (media type)",
+                                      "type": "integer"
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "type"
+                                  ],
                                   "type": "object"
                                 },
                                 "type": "array"
@@ -14579,6 +15533,24 @@
                               "reactions": {
                                 "description": "Message reactions",
                                 "items": {
+                                  "description": "Schema for inline message reactions.\n\nThis is the compact format used in Message.reactions[], which differs from\nthe full Reaction schema used in standalone reaction endpoints.\nMaps to format_reactions_for_client/1 output.\n",
+                                  "properties": {
+                                    "payload": {
+                                      "description": "Reaction payload (e.g., {emoji: '👍'})",
+                                      "type": "object"
+                                    },
+                                    "type": {
+                                      "description": "Reaction type (e.g., emoji_reaction)",
+                                      "type": "string"
+                                    },
+                                    "user": {
+                                      "description": "User who added the reaction",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "type"
+                                  ],
                                   "type": "object"
                                 },
                                 "type": "array"
@@ -14642,6 +15614,40 @@
                           "participants": {
                             "description": "Participant user objects",
                             "items": {
+                              "description": "API schema for a user.",
+                              "properties": {
+                                "alias": {
+                                  "description": "User alias/handle",
+                                  "type": "string"
+                                },
+                                "email": {
+                                  "description": "User email address",
+                                  "type": "string"
+                                },
+                                "id": {
+                                  "description": "User ID",
+                                  "type": "string"
+                                },
+                                "metadata": {
+                                  "description": "User metadata",
+                                  "type": "object"
+                                },
+                                "name": {
+                                  "description": "User display name",
+                                  "type": "string"
+                                },
+                                "org": {
+                                  "description": "Organization",
+                                  "type": "string"
+                                },
+                                "sandbox": {
+                                  "description": "Sandbox",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id"
+                              ],
                               "type": "object"
                             },
                             "type": "array"
@@ -14656,6 +15662,159 @@
                           "participating_agents": {
                             "description": "Agents participating in thread",
                             "items": {
+                              "description": "API schema for an agent.",
+                              "properties": {
+                                "acl": {
+                                  "description": "Access control list. Contains grants array with principal_type, principal, and actions. Null when no ACL restrictions are applied.",
+                                  "properties": {
+                                    "add": {
+                                      "description": "Patch mode: grants to add or merge into existing",
+                                      "items": {
+                                        "description": "API schema for a single ACL grant entry.",
+                                        "properties": {
+                                          "actions": {
+                                            "description": "List of allowed actions (e.g. read, write)",
+                                            "items": {
+                                              "type": "string"
+                                            },
+                                            "type": "array"
+                                          },
+                                          "principal": {
+                                            "description": "Principal identifier (UUID for user/team/org/agent_user, role name for org_role, omit for everyone)",
+                                            "type": "string"
+                                          },
+                                          "principal_type": {
+                                            "description": "Principal type: user, team, org, org_role, agent, or everyone",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "principal_type",
+                                          "actions"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      "type": "array"
+                                    },
+                                    "grants": {
+                                      "description": "Replace mode: full list of grants (replaces all existing). Use [] to clear.",
+                                      "items": {
+                                        "description": "API schema for a single ACL grant entry.",
+                                        "properties": {
+                                          "actions": {
+                                            "description": "List of allowed actions (e.g. read, write)",
+                                            "items": {
+                                              "type": "string"
+                                            },
+                                            "type": "array"
+                                          },
+                                          "principal": {
+                                            "description": "Principal identifier (UUID for user/team/org/agent_user, role name for org_role, omit for everyone)",
+                                            "type": "string"
+                                          },
+                                          "principal_type": {
+                                            "description": "Principal type: user, team, org, org_role, agent, or everyone",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "principal_type",
+                                          "actions"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      "type": "array"
+                                    },
+                                    "remove": {
+                                      "description": "Patch mode: principals to remove from existing",
+                                      "items": {
+                                        "description": "API schema for identifying a principal to remove from an ACL.",
+                                        "properties": {
+                                          "principal": {
+                                            "description": "Principal identifier to remove (omit for everyone)",
+                                            "type": "string"
+                                          },
+                                          "principal_type": {
+                                            "description": "Principal type to remove",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "principal_type"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      "type": "array"
+                                    }
+                                  },
+                                  "type": "object"
+                                },
+                                "app": {
+                                  "description": "Application",
+                                  "type": "string"
+                                },
+                                "created_at": {
+                                  "description": "Creation timestamp",
+                                  "format": "date-time",
+                                  "type": "string"
+                                },
+                                "default_model": {
+                                  "description": "Default AI model",
+                                  "type": "string"
+                                },
+                                "email": {
+                                  "description": "Agent email",
+                                  "type": "string"
+                                },
+                                "id": {
+                                  "description": "Agent ID (agi_...)",
+                                  "type": "string"
+                                },
+                                "identity": {
+                                  "description": "Identity prompt",
+                                  "type": "string"
+                                },
+                                "lookup_key": {
+                                  "description": "Unique lookup key",
+                                  "type": "string"
+                                },
+                                "metadata": {
+                                  "description": "Arbitrary metadata",
+                                  "type": "object"
+                                },
+                                "name": {
+                                  "description": "Agent name",
+                                  "type": "string"
+                                },
+                                "org": {
+                                  "description": "Organization",
+                                  "type": "string"
+                                },
+                                "phone_number": {
+                                  "description": "Agent phone number",
+                                  "type": "string"
+                                },
+                                "sandbox": {
+                                  "description": "Sandbox",
+                                  "type": "string"
+                                },
+                                "team": {
+                                  "description": "Owning team",
+                                  "type": "string"
+                                },
+                                "updated_at": {
+                                  "description": "Last update timestamp",
+                                  "format": "date-time",
+                                  "type": "string"
+                                },
+                                "user": {
+                                  "description": "Owning user",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id"
+                              ],
                               "type": "object"
                             },
                             "type": "array"
@@ -14670,6 +15829,12 @@
                           },
                           "settings": {
                             "description": "Thread settings",
+                            "properties": {
+                              "agent_enabled": {
+                                "description": "Whether the agent is enabled for this thread",
+                                "type": "boolean"
+                              }
+                            },
                             "type": "object"
                           },
                           "slug": {
@@ -14811,6 +15976,12 @@
                       },
                       "settings": {
                         "description": "Thread settings",
+                        "properties": {
+                          "agent_enabled": {
+                            "description": "Whether the agent is enabled for this thread",
+                            "type": "boolean"
+                          }
+                        },
                         "type": "object"
                       },
                       "title": {
@@ -15739,6 +16910,55 @@
                               "actors": {
                                 "description": "Message actors",
                                 "items": {
+                                  "description": "Schema for a message actor (user or agent).\n\nActors represent the entity that sent a message.\nMaps to the actor format from MessageActorHelper.build_actor/1.\n",
+                                  "properties": {
+                                    "alias": {
+                                      "description": "Actor alias/handle",
+                                      "type": "string"
+                                    },
+                                    "id": {
+                                      "description": "Actor ID (format: user-xxx or agent-xxx)",
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "description": "Actor display name",
+                                      "type": "string"
+                                    },
+                                    "profile_picture": {
+                                      "description": "Profile picture",
+                                      "properties": {
+                                        "file": {
+                                          "description": "Storage file",
+                                          "type": "string"
+                                        },
+                                        "height": {
+                                          "description": "Image height in pixels",
+                                          "type": "integer"
+                                        },
+                                        "media": {
+                                          "description": "Media",
+                                          "type": "string"
+                                        },
+                                        "mime_type": {
+                                          "description": "Image MIME type",
+                                          "type": "string"
+                                        },
+                                        "refresh_url": {
+                                          "description": "URL to refresh signed URL",
+                                          "type": "string"
+                                        },
+                                        "url": {
+                                          "description": "Image URL",
+                                          "type": "string"
+                                        },
+                                        "width": {
+                                          "description": "Image width in pixels",
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "type": "object"
+                                    }
+                                  },
                                   "type": "object"
                                 },
                                 "type": "array"
@@ -15750,6 +16970,200 @@
                               "attachments": {
                                 "description": "Message attachments",
                                 "items": {
+                                  "description": "Schema for a message attachment.\n\nAttachments can be of various types (file, scraped_link, artifact, task, media, action).\nFields present depend on the attachment type.\nMaps to format_attachments_for_client/1 output.\n",
+                                  "properties": {
+                                    "content_type": {
+                                      "description": "MIME content type (file, artifact, media types)",
+                                      "type": "string"
+                                    },
+                                    "description": {
+                                      "description": "Description (scraped_link, artifact, task types)",
+                                      "type": "string"
+                                    },
+                                    "filename": {
+                                      "description": "File name (file, artifact, media types)",
+                                      "type": "string"
+                                    },
+                                    "height": {
+                                      "description": "Media height (media type)",
+                                      "type": "integer"
+                                    },
+                                    "id": {
+                                      "description": "Attachment ID",
+                                      "type": "string"
+                                    },
+                                    "image_height": {
+                                      "description": "Preview image height (scraped_link type)",
+                                      "type": "integer"
+                                    },
+                                    "image_source": {
+                                      "description": "Image metadata (file, scraped_link, artifact, media types)",
+                                      "properties": {
+                                        "file": {
+                                          "description": "Storage file",
+                                          "type": "string"
+                                        },
+                                        "height": {
+                                          "description": "Image height in pixels",
+                                          "type": "integer"
+                                        },
+                                        "media": {
+                                          "description": "Media",
+                                          "type": "string"
+                                        },
+                                        "mime_type": {
+                                          "description": "Image MIME type",
+                                          "type": "string"
+                                        },
+                                        "refresh_url": {
+                                          "description": "URL to refresh signed URL",
+                                          "type": "string"
+                                        },
+                                        "url": {
+                                          "description": "Image URL",
+                                          "type": "string"
+                                        },
+                                        "width": {
+                                          "description": "Image width in pixels",
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "type": "object"
+                                    },
+                                    "image_url": {
+                                      "description": "Preview image URL (scraped_link type)",
+                                      "type": "string"
+                                    },
+                                    "image_width": {
+                                      "description": "Preview image width (scraped_link type)",
+                                      "type": "integer"
+                                    },
+                                    "media_type": {
+                                      "description": "Media type (media type)",
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "description": "Media name (media type)",
+                                      "type": "string"
+                                    },
+                                    "object": {
+                                      "description": "Embedded object (task, action types)",
+                                      "type": "object"
+                                    },
+                                    "title": {
+                                      "description": "Title (scraped_link, artifact, task types)",
+                                      "type": "string"
+                                    },
+                                    "type": {
+                                      "description": "Attachment type: file, scraped_link, artifact, task, media, action",
+                                      "type": "string"
+                                    },
+                                    "url": {
+                                      "description": "URL to the resource (file, scraped_link, artifact, media types)",
+                                      "type": "string"
+                                    },
+                                    "variants": {
+                                      "description": "Media variants (media type)",
+                                      "items": {
+                                        "description": "API schema for a media variant.",
+                                        "properties": {
+                                          "content_type": {
+                                            "description": "File content type",
+                                            "type": "string"
+                                          },
+                                          "created_at": {
+                                            "description": "Creation timestamp",
+                                            "format": "date-time",
+                                            "type": "string"
+                                          },
+                                          "file": {
+                                            "description": "Storage file",
+                                            "type": "string"
+                                          },
+                                          "filename": {
+                                            "description": "Original filename",
+                                            "type": "string"
+                                          },
+                                          "height": {
+                                            "description": "Height in pixels",
+                                            "type": "integer"
+                                          },
+                                          "id": {
+                                            "description": "Variant ID",
+                                            "type": "string"
+                                          },
+                                          "image_source": {
+                                            "description": "Image source metadata",
+                                            "properties": {
+                                              "file": {
+                                                "description": "Storage file",
+                                                "type": "string"
+                                              },
+                                              "height": {
+                                                "description": "Image height in pixels",
+                                                "type": "integer"
+                                              },
+                                              "media": {
+                                                "description": "Media",
+                                                "type": "string"
+                                              },
+                                              "mime_type": {
+                                                "description": "Image MIME type",
+                                                "type": "string"
+                                              },
+                                              "refresh_url": {
+                                                "description": "URL to refresh signed URL",
+                                                "type": "string"
+                                              },
+                                              "url": {
+                                                "description": "Image URL",
+                                                "type": "string"
+                                              },
+                                              "width": {
+                                                "description": "Image width in pixels",
+                                                "type": "integer"
+                                              }
+                                            },
+                                            "type": "object"
+                                          },
+                                          "updated_at": {
+                                            "description": "Last update timestamp",
+                                            "format": "date-time",
+                                            "type": "string"
+                                          },
+                                          "url": {
+                                            "description": "Signed download URL",
+                                            "type": "string"
+                                          },
+                                          "variant_key": {
+                                            "description": "Variant key (original, thumbnail, etc)",
+                                            "type": "string"
+                                          },
+                                          "width": {
+                                            "description": "Width in pixels",
+                                            "type": "integer"
+                                          }
+                                        },
+                                        "required": [
+                                          "id"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      "type": "array"
+                                    },
+                                    "version": {
+                                      "description": "Artifact version number (artifact type)",
+                                      "type": "integer"
+                                    },
+                                    "width": {
+                                      "description": "Media width (media type)",
+                                      "type": "integer"
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "type"
+                                  ],
                                   "type": "object"
                                 },
                                 "type": "array"
@@ -15794,6 +17208,24 @@
                               "reactions": {
                                 "description": "Message reactions",
                                 "items": {
+                                  "description": "Schema for inline message reactions.\n\nThis is the compact format used in Message.reactions[], which differs from\nthe full Reaction schema used in standalone reaction endpoints.\nMaps to format_reactions_for_client/1 output.\n",
+                                  "properties": {
+                                    "payload": {
+                                      "description": "Reaction payload (e.g., {emoji: '👍'})",
+                                      "type": "object"
+                                    },
+                                    "type": {
+                                      "description": "Reaction type (e.g., emoji_reaction)",
+                                      "type": "string"
+                                    },
+                                    "user": {
+                                      "description": "User who added the reaction",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "type"
+                                  ],
                                   "type": "object"
                                 },
                                 "type": "array"
@@ -15857,6 +17289,40 @@
                           "participants": {
                             "description": "Participant user objects",
                             "items": {
+                              "description": "API schema for a user.",
+                              "properties": {
+                                "alias": {
+                                  "description": "User alias/handle",
+                                  "type": "string"
+                                },
+                                "email": {
+                                  "description": "User email address",
+                                  "type": "string"
+                                },
+                                "id": {
+                                  "description": "User ID",
+                                  "type": "string"
+                                },
+                                "metadata": {
+                                  "description": "User metadata",
+                                  "type": "object"
+                                },
+                                "name": {
+                                  "description": "User display name",
+                                  "type": "string"
+                                },
+                                "org": {
+                                  "description": "Organization",
+                                  "type": "string"
+                                },
+                                "sandbox": {
+                                  "description": "Sandbox",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id"
+                              ],
                               "type": "object"
                             },
                             "type": "array"
@@ -15871,6 +17337,159 @@
                           "participating_agents": {
                             "description": "Agents participating in thread",
                             "items": {
+                              "description": "API schema for an agent.",
+                              "properties": {
+                                "acl": {
+                                  "description": "Access control list. Contains grants array with principal_type, principal, and actions. Null when no ACL restrictions are applied.",
+                                  "properties": {
+                                    "add": {
+                                      "description": "Patch mode: grants to add or merge into existing",
+                                      "items": {
+                                        "description": "API schema for a single ACL grant entry.",
+                                        "properties": {
+                                          "actions": {
+                                            "description": "List of allowed actions (e.g. read, write)",
+                                            "items": {
+                                              "type": "string"
+                                            },
+                                            "type": "array"
+                                          },
+                                          "principal": {
+                                            "description": "Principal identifier (UUID for user/team/org/agent_user, role name for org_role, omit for everyone)",
+                                            "type": "string"
+                                          },
+                                          "principal_type": {
+                                            "description": "Principal type: user, team, org, org_role, agent, or everyone",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "principal_type",
+                                          "actions"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      "type": "array"
+                                    },
+                                    "grants": {
+                                      "description": "Replace mode: full list of grants (replaces all existing). Use [] to clear.",
+                                      "items": {
+                                        "description": "API schema for a single ACL grant entry.",
+                                        "properties": {
+                                          "actions": {
+                                            "description": "List of allowed actions (e.g. read, write)",
+                                            "items": {
+                                              "type": "string"
+                                            },
+                                            "type": "array"
+                                          },
+                                          "principal": {
+                                            "description": "Principal identifier (UUID for user/team/org/agent_user, role name for org_role, omit for everyone)",
+                                            "type": "string"
+                                          },
+                                          "principal_type": {
+                                            "description": "Principal type: user, team, org, org_role, agent, or everyone",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "principal_type",
+                                          "actions"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      "type": "array"
+                                    },
+                                    "remove": {
+                                      "description": "Patch mode: principals to remove from existing",
+                                      "items": {
+                                        "description": "API schema for identifying a principal to remove from an ACL.",
+                                        "properties": {
+                                          "principal": {
+                                            "description": "Principal identifier to remove (omit for everyone)",
+                                            "type": "string"
+                                          },
+                                          "principal_type": {
+                                            "description": "Principal type to remove",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "principal_type"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      "type": "array"
+                                    }
+                                  },
+                                  "type": "object"
+                                },
+                                "app": {
+                                  "description": "Application",
+                                  "type": "string"
+                                },
+                                "created_at": {
+                                  "description": "Creation timestamp",
+                                  "format": "date-time",
+                                  "type": "string"
+                                },
+                                "default_model": {
+                                  "description": "Default AI model",
+                                  "type": "string"
+                                },
+                                "email": {
+                                  "description": "Agent email",
+                                  "type": "string"
+                                },
+                                "id": {
+                                  "description": "Agent ID (agi_...)",
+                                  "type": "string"
+                                },
+                                "identity": {
+                                  "description": "Identity prompt",
+                                  "type": "string"
+                                },
+                                "lookup_key": {
+                                  "description": "Unique lookup key",
+                                  "type": "string"
+                                },
+                                "metadata": {
+                                  "description": "Arbitrary metadata",
+                                  "type": "object"
+                                },
+                                "name": {
+                                  "description": "Agent name",
+                                  "type": "string"
+                                },
+                                "org": {
+                                  "description": "Organization",
+                                  "type": "string"
+                                },
+                                "phone_number": {
+                                  "description": "Agent phone number",
+                                  "type": "string"
+                                },
+                                "sandbox": {
+                                  "description": "Sandbox",
+                                  "type": "string"
+                                },
+                                "team": {
+                                  "description": "Owning team",
+                                  "type": "string"
+                                },
+                                "updated_at": {
+                                  "description": "Last update timestamp",
+                                  "format": "date-time",
+                                  "type": "string"
+                                },
+                                "user": {
+                                  "description": "Owning user",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id"
+                              ],
                               "type": "object"
                             },
                             "type": "array"
@@ -15885,6 +17504,12 @@
                           },
                           "settings": {
                             "description": "Thread settings",
+                            "properties": {
+                              "agent_enabled": {
+                                "description": "Whether the agent is enabled for this thread",
+                                "type": "boolean"
+                              }
+                            },
                             "type": "object"
                           },
                           "slug": {
@@ -16022,6 +17647,12 @@
                       },
                       "settings": {
                         "description": "Thread settings",
+                        "properties": {
+                          "agent_enabled": {
+                            "description": "Whether the agent is enabled for this thread",
+                            "type": "boolean"
+                          }
+                        },
                         "type": "object"
                       },
                       "title": {
@@ -19088,6 +20719,36 @@
                           },
                           "image_source": {
                             "description": "Image source metadata",
+                            "properties": {
+                              "file": {
+                                "description": "Storage file",
+                                "type": "string"
+                              },
+                              "height": {
+                                "description": "Image height in pixels",
+                                "type": "integer"
+                              },
+                              "media": {
+                                "description": "Media",
+                                "type": "string"
+                              },
+                              "mime_type": {
+                                "description": "Image MIME type",
+                                "type": "string"
+                              },
+                              "refresh_url": {
+                                "description": "URL to refresh signed URL",
+                                "type": "string"
+                              },
+                              "url": {
+                                "description": "Image URL",
+                                "type": "string"
+                              },
+                              "width": {
+                                "description": "Image width in pixels",
+                                "type": "integer"
+                              }
+                            },
                             "type": "object"
                           },
                           "name": {
@@ -20411,6 +22072,55 @@
                   "actors": {
                     "description": "Message actors",
                     "items": {
+                      "description": "Schema for a message actor (user or agent).\n\nActors represent the entity that sent a message.\nMaps to the actor format from MessageActorHelper.build_actor/1.\n",
+                      "properties": {
+                        "alias": {
+                          "description": "Actor alias/handle",
+                          "type": "string"
+                        },
+                        "id": {
+                          "description": "Actor ID (format: user-xxx or agent-xxx)",
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Actor display name",
+                          "type": "string"
+                        },
+                        "profile_picture": {
+                          "description": "Profile picture",
+                          "properties": {
+                            "file": {
+                              "description": "Storage file",
+                              "type": "string"
+                            },
+                            "height": {
+                              "description": "Image height in pixels",
+                              "type": "integer"
+                            },
+                            "media": {
+                              "description": "Media",
+                              "type": "string"
+                            },
+                            "mime_type": {
+                              "description": "Image MIME type",
+                              "type": "string"
+                            },
+                            "refresh_url": {
+                              "description": "URL to refresh signed URL",
+                              "type": "string"
+                            },
+                            "url": {
+                              "description": "Image URL",
+                              "type": "string"
+                            },
+                            "width": {
+                              "description": "Image width in pixels",
+                              "type": "integer"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
                       "type": "object"
                     },
                     "type": "array"
@@ -20422,6 +22132,200 @@
                   "attachments": {
                     "description": "Message attachments",
                     "items": {
+                      "description": "Schema for a message attachment.\n\nAttachments can be of various types (file, scraped_link, artifact, task, media, action).\nFields present depend on the attachment type.\nMaps to format_attachments_for_client/1 output.\n",
+                      "properties": {
+                        "content_type": {
+                          "description": "MIME content type (file, artifact, media types)",
+                          "type": "string"
+                        },
+                        "description": {
+                          "description": "Description (scraped_link, artifact, task types)",
+                          "type": "string"
+                        },
+                        "filename": {
+                          "description": "File name (file, artifact, media types)",
+                          "type": "string"
+                        },
+                        "height": {
+                          "description": "Media height (media type)",
+                          "type": "integer"
+                        },
+                        "id": {
+                          "description": "Attachment ID",
+                          "type": "string"
+                        },
+                        "image_height": {
+                          "description": "Preview image height (scraped_link type)",
+                          "type": "integer"
+                        },
+                        "image_source": {
+                          "description": "Image metadata (file, scraped_link, artifact, media types)",
+                          "properties": {
+                            "file": {
+                              "description": "Storage file",
+                              "type": "string"
+                            },
+                            "height": {
+                              "description": "Image height in pixels",
+                              "type": "integer"
+                            },
+                            "media": {
+                              "description": "Media",
+                              "type": "string"
+                            },
+                            "mime_type": {
+                              "description": "Image MIME type",
+                              "type": "string"
+                            },
+                            "refresh_url": {
+                              "description": "URL to refresh signed URL",
+                              "type": "string"
+                            },
+                            "url": {
+                              "description": "Image URL",
+                              "type": "string"
+                            },
+                            "width": {
+                              "description": "Image width in pixels",
+                              "type": "integer"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "image_url": {
+                          "description": "Preview image URL (scraped_link type)",
+                          "type": "string"
+                        },
+                        "image_width": {
+                          "description": "Preview image width (scraped_link type)",
+                          "type": "integer"
+                        },
+                        "media_type": {
+                          "description": "Media type (media type)",
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Media name (media type)",
+                          "type": "string"
+                        },
+                        "object": {
+                          "description": "Embedded object (task, action types)",
+                          "type": "object"
+                        },
+                        "title": {
+                          "description": "Title (scraped_link, artifact, task types)",
+                          "type": "string"
+                        },
+                        "type": {
+                          "description": "Attachment type: file, scraped_link, artifact, task, media, action",
+                          "type": "string"
+                        },
+                        "url": {
+                          "description": "URL to the resource (file, scraped_link, artifact, media types)",
+                          "type": "string"
+                        },
+                        "variants": {
+                          "description": "Media variants (media type)",
+                          "items": {
+                            "description": "API schema for a media variant.",
+                            "properties": {
+                              "content_type": {
+                                "description": "File content type",
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "description": "Creation timestamp",
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "file": {
+                                "description": "Storage file",
+                                "type": "string"
+                              },
+                              "filename": {
+                                "description": "Original filename",
+                                "type": "string"
+                              },
+                              "height": {
+                                "description": "Height in pixels",
+                                "type": "integer"
+                              },
+                              "id": {
+                                "description": "Variant ID",
+                                "type": "string"
+                              },
+                              "image_source": {
+                                "description": "Image source metadata",
+                                "properties": {
+                                  "file": {
+                                    "description": "Storage file",
+                                    "type": "string"
+                                  },
+                                  "height": {
+                                    "description": "Image height in pixels",
+                                    "type": "integer"
+                                  },
+                                  "media": {
+                                    "description": "Media",
+                                    "type": "string"
+                                  },
+                                  "mime_type": {
+                                    "description": "Image MIME type",
+                                    "type": "string"
+                                  },
+                                  "refresh_url": {
+                                    "description": "URL to refresh signed URL",
+                                    "type": "string"
+                                  },
+                                  "url": {
+                                    "description": "Image URL",
+                                    "type": "string"
+                                  },
+                                  "width": {
+                                    "description": "Image width in pixels",
+                                    "type": "integer"
+                                  }
+                                },
+                                "type": "object"
+                              },
+                              "updated_at": {
+                                "description": "Last update timestamp",
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "url": {
+                                "description": "Signed download URL",
+                                "type": "string"
+                              },
+                              "variant_key": {
+                                "description": "Variant key (original, thumbnail, etc)",
+                                "type": "string"
+                              },
+                              "width": {
+                                "description": "Width in pixels",
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "id"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "version": {
+                          "description": "Artifact version number (artifact type)",
+                          "type": "integer"
+                        },
+                        "width": {
+                          "description": "Media width (media type)",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type"
+                      ],
                       "type": "object"
                     },
                     "type": "array"
@@ -20466,6 +22370,24 @@
                   "reactions": {
                     "description": "Message reactions",
                     "items": {
+                      "description": "Schema for inline message reactions.\n\nThis is the compact format used in Message.reactions[], which differs from\nthe full Reaction schema used in standalone reaction endpoints.\nMaps to format_reactions_for_client/1 output.\n",
+                      "properties": {
+                        "payload": {
+                          "description": "Reaction payload (e.g., {emoji: '👍'})",
+                          "type": "object"
+                        },
+                        "type": {
+                          "description": "Reaction type (e.g., emoji_reaction)",
+                          "type": "string"
+                        },
+                        "user": {
+                          "description": "User who added the reaction",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ],
                       "type": "object"
                     },
                     "type": "array"
@@ -20537,6 +22459,55 @@
                   "actors": {
                     "description": "Message actors",
                     "items": {
+                      "description": "Schema for a message actor (user or agent).\n\nActors represent the entity that sent a message.\nMaps to the actor format from MessageActorHelper.build_actor/1.\n",
+                      "properties": {
+                        "alias": {
+                          "description": "Actor alias/handle",
+                          "type": "string"
+                        },
+                        "id": {
+                          "description": "Actor ID (format: user-xxx or agent-xxx)",
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Actor display name",
+                          "type": "string"
+                        },
+                        "profile_picture": {
+                          "description": "Profile picture",
+                          "properties": {
+                            "file": {
+                              "description": "Storage file",
+                              "type": "string"
+                            },
+                            "height": {
+                              "description": "Image height in pixels",
+                              "type": "integer"
+                            },
+                            "media": {
+                              "description": "Media",
+                              "type": "string"
+                            },
+                            "mime_type": {
+                              "description": "Image MIME type",
+                              "type": "string"
+                            },
+                            "refresh_url": {
+                              "description": "URL to refresh signed URL",
+                              "type": "string"
+                            },
+                            "url": {
+                              "description": "Image URL",
+                              "type": "string"
+                            },
+                            "width": {
+                              "description": "Image width in pixels",
+                              "type": "integer"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
                       "type": "object"
                     },
                     "type": "array"
@@ -20548,6 +22519,200 @@
                   "attachments": {
                     "description": "Message attachments",
                     "items": {
+                      "description": "Schema for a message attachment.\n\nAttachments can be of various types (file, scraped_link, artifact, task, media, action).\nFields present depend on the attachment type.\nMaps to format_attachments_for_client/1 output.\n",
+                      "properties": {
+                        "content_type": {
+                          "description": "MIME content type (file, artifact, media types)",
+                          "type": "string"
+                        },
+                        "description": {
+                          "description": "Description (scraped_link, artifact, task types)",
+                          "type": "string"
+                        },
+                        "filename": {
+                          "description": "File name (file, artifact, media types)",
+                          "type": "string"
+                        },
+                        "height": {
+                          "description": "Media height (media type)",
+                          "type": "integer"
+                        },
+                        "id": {
+                          "description": "Attachment ID",
+                          "type": "string"
+                        },
+                        "image_height": {
+                          "description": "Preview image height (scraped_link type)",
+                          "type": "integer"
+                        },
+                        "image_source": {
+                          "description": "Image metadata (file, scraped_link, artifact, media types)",
+                          "properties": {
+                            "file": {
+                              "description": "Storage file",
+                              "type": "string"
+                            },
+                            "height": {
+                              "description": "Image height in pixels",
+                              "type": "integer"
+                            },
+                            "media": {
+                              "description": "Media",
+                              "type": "string"
+                            },
+                            "mime_type": {
+                              "description": "Image MIME type",
+                              "type": "string"
+                            },
+                            "refresh_url": {
+                              "description": "URL to refresh signed URL",
+                              "type": "string"
+                            },
+                            "url": {
+                              "description": "Image URL",
+                              "type": "string"
+                            },
+                            "width": {
+                              "description": "Image width in pixels",
+                              "type": "integer"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "image_url": {
+                          "description": "Preview image URL (scraped_link type)",
+                          "type": "string"
+                        },
+                        "image_width": {
+                          "description": "Preview image width (scraped_link type)",
+                          "type": "integer"
+                        },
+                        "media_type": {
+                          "description": "Media type (media type)",
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Media name (media type)",
+                          "type": "string"
+                        },
+                        "object": {
+                          "description": "Embedded object (task, action types)",
+                          "type": "object"
+                        },
+                        "title": {
+                          "description": "Title (scraped_link, artifact, task types)",
+                          "type": "string"
+                        },
+                        "type": {
+                          "description": "Attachment type: file, scraped_link, artifact, task, media, action",
+                          "type": "string"
+                        },
+                        "url": {
+                          "description": "URL to the resource (file, scraped_link, artifact, media types)",
+                          "type": "string"
+                        },
+                        "variants": {
+                          "description": "Media variants (media type)",
+                          "items": {
+                            "description": "API schema for a media variant.",
+                            "properties": {
+                              "content_type": {
+                                "description": "File content type",
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "description": "Creation timestamp",
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "file": {
+                                "description": "Storage file",
+                                "type": "string"
+                              },
+                              "filename": {
+                                "description": "Original filename",
+                                "type": "string"
+                              },
+                              "height": {
+                                "description": "Height in pixels",
+                                "type": "integer"
+                              },
+                              "id": {
+                                "description": "Variant ID",
+                                "type": "string"
+                              },
+                              "image_source": {
+                                "description": "Image source metadata",
+                                "properties": {
+                                  "file": {
+                                    "description": "Storage file",
+                                    "type": "string"
+                                  },
+                                  "height": {
+                                    "description": "Image height in pixels",
+                                    "type": "integer"
+                                  },
+                                  "media": {
+                                    "description": "Media",
+                                    "type": "string"
+                                  },
+                                  "mime_type": {
+                                    "description": "Image MIME type",
+                                    "type": "string"
+                                  },
+                                  "refresh_url": {
+                                    "description": "URL to refresh signed URL",
+                                    "type": "string"
+                                  },
+                                  "url": {
+                                    "description": "Image URL",
+                                    "type": "string"
+                                  },
+                                  "width": {
+                                    "description": "Image width in pixels",
+                                    "type": "integer"
+                                  }
+                                },
+                                "type": "object"
+                              },
+                              "updated_at": {
+                                "description": "Last update timestamp",
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "url": {
+                                "description": "Signed download URL",
+                                "type": "string"
+                              },
+                              "variant_key": {
+                                "description": "Variant key (original, thumbnail, etc)",
+                                "type": "string"
+                              },
+                              "width": {
+                                "description": "Width in pixels",
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "id"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "version": {
+                          "description": "Artifact version number (artifact type)",
+                          "type": "integer"
+                        },
+                        "width": {
+                          "description": "Media width (media type)",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type"
+                      ],
                       "type": "object"
                     },
                     "type": "array"
@@ -20592,6 +22757,24 @@
                   "reactions": {
                     "description": "Message reactions",
                     "items": {
+                      "description": "Schema for inline message reactions.\n\nThis is the compact format used in Message.reactions[], which differs from\nthe full Reaction schema used in standalone reaction endpoints.\nMaps to format_reactions_for_client/1 output.\n",
+                      "properties": {
+                        "payload": {
+                          "description": "Reaction payload (e.g., {emoji: '👍'})",
+                          "type": "object"
+                        },
+                        "type": {
+                          "description": "Reaction type (e.g., emoji_reaction)",
+                          "type": "string"
+                        },
+                        "user": {
+                          "description": "User who added the reaction",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ],
                       "type": "object"
                     },
                     "type": "array"
