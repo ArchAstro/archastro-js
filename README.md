@@ -1,4 +1,4 @@
-# @archastro/sdk
+# ArchAstro Developer Platform - JS SDK
 
 [![CI](https://github.com/archastro/archastro-js/actions/workflows/ci.yml/badge.svg)](https://github.com/archastro/archastro-js/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/@archastro/sdk)](https://www.npmjs.com/package/@archastro/sdk)
