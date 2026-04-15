@@ -21488,94 +21488,6 @@
   ],
   "x-channels": [
     {
-      "description": "Phoenix channel for real-time activity feed updates.\n\nClients join a topic scoped to an agent or org and receive\n`new_entry` events as feed entries are created.\n\n## Topics\n\n  * `\"api:activity_feed:agent:{agent_user_id}\"` — entries for a specific agent\n  * `\"api:activity_feed:org:{org_id}\"` — entries for an entire org/tenant\n",
-      "joins": [
-        {
-          "description": "Join an agent-scoped activity feed",
-          "params": {
-            "properties": {
-              "agent_id": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "agent_id"
-            ],
-            "type": "object"
-          },
-          "pattern": "api:activity_feed:agent:{agent_id}",
-          "returns": {
-            "type": "object"
-          }
-        },
-        {
-          "description": "Join an org-scoped activity feed",
-          "params": {
-            "properties": {
-              "org_id": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "org_id"
-            ],
-            "type": "object"
-          },
-          "pattern": "api:activity_feed:org:{org_id}",
-          "returns": {
-            "type": "object"
-          }
-        }
-      ],
-      "messages": [
-        {
-          "description": "List activity feed entries with cursor-based pagination",
-          "event": "list_entries",
-          "params": {
-            "properties": {
-              "after_cursor": {
-                "type": "string"
-              },
-              "before_cursor": {
-                "type": "string"
-              },
-              "kind": {
-                "type": "string"
-              },
-              "level": {
-                "type": "string"
-              },
-              "limit": {
-                "type": "integer"
-              }
-            },
-            "type": "object"
-          },
-          "returns": {
-            "type": "object"
-          }
-        }
-      ],
-      "name": "ApiActivityFeedChannel",
-      "pushes": [
-        {
-          "description": null,
-          "event": "new_entry",
-          "payload": {
-            "properties": {
-              "entry": {
-                "type": "object"
-              }
-            },
-            "type": "object"
-          }
-        }
-      ],
-      "x-auth": [
-        "bearer"
-      ]
-    },
-    {
       "description": "Channel for real-time chat messaging.\n\nSupports team-scoped and user-scoped threads with keyed, transient, and direct\nthread access patterns.\n",
       "joins": [
         {
@@ -22788,6 +22700,94 @@
           "payload": {
             "properties": {
               "event": {
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        }
+      ],
+      "x-auth": [
+        "bearer"
+      ]
+    },
+    {
+      "description": "Phoenix channel for real-time activity feed updates.\n\nClients join a topic scoped to an agent or org and receive\n`new_entry` events as feed entries are created.\n\n## Topics\n\n  * `\"api:activity_feed:agent:{agent_user_id}\"` — entries for a specific agent\n  * `\"api:activity_feed:org:{org_id}\"` — entries for an entire org/tenant\n",
+      "joins": [
+        {
+          "description": "Join an agent-scoped activity feed",
+          "params": {
+            "properties": {
+              "agent_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "agent_id"
+            ],
+            "type": "object"
+          },
+          "pattern": "api:activity_feed:agent:{agent_id}",
+          "returns": {
+            "type": "object"
+          }
+        },
+        {
+          "description": "Join an org-scoped activity feed",
+          "params": {
+            "properties": {
+              "org_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "org_id"
+            ],
+            "type": "object"
+          },
+          "pattern": "api:activity_feed:org:{org_id}",
+          "returns": {
+            "type": "object"
+          }
+        }
+      ],
+      "messages": [
+        {
+          "description": "List activity feed entries with cursor-based pagination",
+          "event": "list_entries",
+          "params": {
+            "properties": {
+              "after_cursor": {
+                "type": "string"
+              },
+              "before_cursor": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "level": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer"
+              }
+            },
+            "type": "object"
+          },
+          "returns": {
+            "type": "object"
+          }
+        }
+      ],
+      "name": "ApiActivityFeedChannel",
+      "pushes": [
+        {
+          "description": null,
+          "event": "new_entry",
+          "payload": {
+            "properties": {
+              "entry": {
                 "type": "object"
               }
             },
