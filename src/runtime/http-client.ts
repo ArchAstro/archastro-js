@@ -153,7 +153,7 @@ export class HttpClient {
       headers?: Record<string, string>;
       query?: Record<string, QueryValue>;
     } = {}
-  ): Promise<{ content: string; mimeType: string }> {
+  ): Promise<{ content: ArrayBuffer; mimeType: string }> {
     if (this.config.refreshOnly && !path.startsWith(`${DEFAULT_API_PREFIX}/auth/`)) {
       throw new Error(
         `Refresh-only HTTP client cannot make requests outside ${DEFAULT_API_PREFIX}/auth/`
@@ -213,7 +213,7 @@ export class HttpClient {
       throw new ApiError(response.status, errorCode, message, rawData);
     }
 
-    const content = await response.text();
+    const content = await response.arrayBuffer();
     const mimeType = response.headers.get("content-type") || "application/octet-stream";
 
     return { content, mimeType };
