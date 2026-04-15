@@ -147,6 +147,79 @@ export class HttpClient {
     return response.json() as Promise<T>;
   }
 
+  async requestRaw(
+    path: string,
+    options: {
+      method?: string;
+      headers?: Record<string, string>;
+      query?: Record<string, QueryValue>;
+    } = {}
+  ): Promise<{ content: string; mimeType: string }> {
+    const doFetch = (): Promise<Response> => {
+      const { method = "GET", headers = {}, query } = options;
+      const token = this.getToken();
+
+      let url = `${this.config.baseUrl}${this.transformPath(path)}`;
+      url = appendQueryString(url, query);
+
+      return fetch(url, {
+        method,
+        headers: {
+          ...(this.config.defaultHeaders || {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...headers,
+        },
+      });
+    };
+
+    if (this.config.refreshOnly && !path.startsWith(`${DEFAULT_API_PREFIX}/auth/`)) {
+      throw new Error(
+        `Refresh-only HTTP client cannot make requests outside ${DEFAULT_API_PREFIX}/auth/`
+      );
+    }
+
+    let response = await doFetch();
+
+    if (
+      response.status === 401 &&
+      this.config.onRefreshToken &&
+      !path.startsWith(`${DEFAULT_API_PREFIX}/auth/`)
+    ) {
+      if (!this._refreshPromise) {
+        this._refreshPromise = this.config.onRefreshToken().finally(() => {
+          this._refreshPromise = null;
+        });
+      }
+      let refreshed = false;
+      try {
+        const newToken = await this._refreshPromise;
+        this.config.accessToken = newToken;
+        refreshed = true;
+      } catch {
+        // refresh failed — fall through to throw original 401
+      }
+      if (refreshed) {
+        response = await doFetch();
+      }
+    }
+
+    if (!response.ok) {
+      let rawData: Record<string, unknown> = {};
+      try {
+        rawData = (await response.json()) as Record<string, unknown>;
+      } catch {
+        // ignore parse errors
+      }
+      const { errorCode, message } = parseErrorResponse(rawData, response.status);
+      throw new ApiError(response.status, errorCode, message, rawData);
+    }
+
+    const content = await response.text();
+    const mimeType = response.headers.get("content-type") || "text/plain";
+
+    return { content, mimeType };
+  }
+
   async requestStream(
     path: string,
     options: {

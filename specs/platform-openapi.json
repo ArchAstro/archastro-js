@@ -1664,6 +1664,28 @@
         ],
         "type": "object"
       },
+      "BillingPlan": {
+        "description": "Schema for a billing plan.",
+        "properties": {
+          "description": {
+            "description": "Plan description",
+            "type": "string"
+          },
+          "id": {
+            "description": "Plan identifier (e.g. paygo)",
+            "type": "string"
+          },
+          "name": {
+            "description": "Human-readable plan name",
+            "type": "string"
+          },
+          "target": {
+            "description": "Entity type this plan applies to (developer or org)",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "EvalTask": {
         "description": "Schema for an eval task.",
         "properties": {
@@ -3825,6 +3847,22 @@
         ],
         "type": "object"
       },
+      "AgentComputerListResponse": {
+        "description": "List response for agent computers.",
+        "properties": {
+          "data": {
+            "description": "List of agent computers",
+            "items": {
+              "$ref": "#/components/schemas/AgentComputer"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
       "AuthTokens": {
         "description": "API schema for authentication token responses.",
         "properties": {
@@ -4091,6 +4129,10 @@
           },
           "billing_provider_id": {
             "description": "Stripe customer ID",
+            "type": "string"
+          },
+          "plan": {
+            "description": "Billing plan (e.g. paygo)",
             "type": "string"
           }
         },
@@ -5373,6 +5415,19 @@
         ],
         "type": "object"
       },
+      "DeviceAuthorizationStatusResponse": {
+        "description": "API schema for OAuth device authorization approval and denial responses.",
+        "properties": {
+          "status": {
+            "description": "Authorization status (approved or denied)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "type": "object"
+      },
       "IntegrationCreateParams": {
         "description": "Integration fields for auto-creating the underlying integration.\n\nWhen creating an agent installation for an `integration/*` kind, callers\ncan pass this object to auto-create the underlying Integration record.\nRequired fields depend on the kind's auth type:\n\n- `app_installation` kinds (slack_bot, github_app): requires `installation_id`\n- `oauth` kinds (gmail, outlook, slack): requires `access_token`\n",
         "properties": {
@@ -5861,6 +5916,10 @@
           },
           "billing_provider_id": {
             "description": "Stripe customer ID",
+            "type": "string"
+          },
+          "plan": {
+            "description": "Billing plan (e.g. enterprise-pilot)",
             "type": "string"
           },
           "primary_user": {
@@ -7591,6 +7650,22 @@
         ],
         "type": "object"
       },
+      "InstallationSourceListResponse": {
+        "description": "List response for installation sources.",
+        "properties": {
+          "data": {
+            "description": "List of installation sources",
+            "items": {
+              "$ref": "#/components/schemas/InstallationSource"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
       "DeveloperUser": {
         "description": "Schema for a user (developer admin view).\n\nMaps to serialized user output from developer portal API.\n",
         "properties": {
@@ -8059,7 +8134,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/InstallationSourceListResponse"
                 }
               }
             },
@@ -8359,15 +8434,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful response"
+          "204": {
+            "description": "No content"
           },
           "400": {
             "description": "Bad request - owner required"
@@ -8552,15 +8620,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful response"
+          "204": {
+            "description": "No content"
           },
           "401": {
             "description": "Unauthorized"
@@ -8721,15 +8782,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful response"
+          "204": {
+            "description": "No content"
           },
           "401": {
             "description": "Unauthorized"
@@ -10216,15 +10270,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful response"
+          "204": {
+            "description": "No content"
           },
           "401": {
             "description": "Unauthorized"
@@ -10401,15 +10448,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful response"
+          "204": {
+            "description": "No content"
           },
           "401": {
             "description": "Unauthorized"
@@ -11141,7 +11181,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/AgentComputerListResponse"
                 }
               }
             },
@@ -11627,15 +11667,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful response"
+          "204": {
+            "description": "No content"
           },
           "401": {
             "description": "Unauthorized"
@@ -11919,6 +11952,15 @@
             "schema": {
               "type": "boolean"
             }
+          },
+          {
+            "description": "Maximum number of results (default 25, max 100)",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -12177,15 +12219,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful response"
+          "204": {
+            "description": "No content"
           },
           "401": {
             "description": "Unauthorized"
@@ -12718,15 +12753,8 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful response"
+          "204": {
+            "description": "No content"
           },
           "400": {
             "description": "Bad request"
@@ -13136,15 +13164,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful response"
+          "204": {
+            "description": "No content"
           },
           "401": {
             "description": "Unauthorized"
@@ -13898,7 +13919,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/DeviceAuthorizationStatusResponse"
                 }
               }
             },
@@ -13939,13 +13960,14 @@
         "responses": {
           "200": {
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "type": "object"
+                  "format": "binary",
+                  "type": "string"
                 }
               }
             },
-            "description": "Successful response"
+            "description": "Raw artifact file content"
           },
           "401": {
             "description": "Unauthorized"
@@ -14858,15 +14880,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful response"
+          "204": {
+            "description": "No content"
           },
           "401": {
             "description": "Unauthorized"
@@ -15090,15 +15105,8 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful response"
+          "204": {
+            "description": "No content"
           },
           "401": {
             "description": "Unauthorized"
@@ -16044,15 +16052,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful response"
+          "204": {
+            "description": "No content"
           },
           "401": {
             "description": "Unauthorized"
@@ -16445,15 +16446,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful response"
+          "204": {
+            "description": "No content"
           },
           "401": {
             "description": "Unauthorized"
@@ -16525,15 +16519,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful response"
+          "204": {
+            "description": "No content"
           },
           "401": {
             "description": "Unauthorized"
@@ -16569,15 +16556,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful response"
+          "204": {
+            "description": "No content"
           },
           "401": {
             "description": "Unauthorized"
@@ -18351,15 +18331,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful response"
+          "204": {
+            "description": "No content"
           },
           "401": {
             "description": "Unauthorized"
@@ -18813,7 +18786,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/DeviceAuthorizationStatusResponse"
                 }
               }
             },
@@ -19567,13 +19540,14 @@
         "responses": {
           "200": {
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "type": "object"
+                  "format": "binary",
+                  "type": "string"
                 }
               }
             },
-            "description": "Successful response"
+            "description": "Raw config content"
           },
           "400": {
             "description": "Bad request - owner required or conversion not possible"
@@ -19644,15 +19618,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful response"
+          "204": {
+            "description": "No content"
           },
           "401": {
             "description": "Unauthorized"
@@ -20002,15 +19969,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful response"
+          "204": {
+            "description": "No content"
           },
           "401": {
             "description": "Unauthorized"
@@ -20369,15 +20329,8 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful response"
+          "204": {
+            "description": "No content"
           },
           "401": {
             "description": "Unauthorized"
@@ -21432,15 +21385,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful response"
+          "204": {
+            "description": "No content"
           },
           "401": {
             "description": "Unauthorized"
