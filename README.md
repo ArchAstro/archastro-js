@@ -4,7 +4,7 @@
 [![npm version](https://img.shields.io/npm/v/@archastro/sdk)](https://www.npmjs.com/package/@archastro/sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
-TypeScript SDK for the [ArchAstro Platform API](https://platform.archastro.ai). Provides typed access to all platform resources, authentication helpers, and real-time Phoenix Channel support.
+JS/TypeScript SDK for the [ArchAstro Developer Platform](https://developers.archastro.ai). Provides typed access to all platform resources, authentication helpers, and real-time Phoenix Channel support. You must register first on the developer site before using this SDK.
 
 ## Installation
 
