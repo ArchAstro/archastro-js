@@ -1,33 +1,10 @@
 {
-  "name": "@archastro/sdk",
-  "version": "0.4.0",
-  "description": "TypeScript SDK for the ArchAstro Platform API",
-  "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "name": "archastro-js",
+  "private": true,
+  "workspaces": ["packages/*"],
   "scripts": {
-    "build": "tsc",
-    "prepublishOnly": "npm run build",
-    "test": "vitest run",
-    "test:contract": "vitest run --config __tests__/contract/vitest.contract.config.ts"
-  },
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/archastro/archastro-js.git"
-  },
-  "dependencies": {
-    "ws": "^8.17.0",
-    "zod": "^3.22.0"
-  },
-  "devDependencies": {
-    "@stoplight/prism-cli": "^5.14.2",
-    "@types/node": "^22.0.0",
-    "@types/ws": "^8.5.0",
-    "typescript": "^5.4.0",
-    "vitest": "^4.1.3"
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present"
   }
 }

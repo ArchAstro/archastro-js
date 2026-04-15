@@ -22,11 +22,12 @@ jobs:
 
       - run: npm ci
 
-      - name: Type check
+      - name: Type check (sdk)
         run: npx tsc --noEmit
+        working-directory: packages/sdk
 
       - name: Unit tests
-        run: npm test
+        run: npm test --workspaces --if-present
 
   contract-tests:
     name: Contract Tests
@@ -43,3 +44,4 @@ jobs:
 
       - name: Contract tests
         run: npm run test:contract
+        working-directory: packages/sdk
