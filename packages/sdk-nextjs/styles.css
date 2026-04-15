@@ -1,0 +1,5 @@
+/* Tailwind v4 source hint for consuming apps.
+   Import this file to include SDK component classes in your Tailwind build:
+   @import "@archastro/sdk-nextjs/styles.css";
+*/
+@source "./src";
