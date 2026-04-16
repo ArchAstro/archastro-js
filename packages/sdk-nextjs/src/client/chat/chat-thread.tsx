@@ -16,7 +16,6 @@ import { useClient, useCurrentUser, useSocket } from "../hooks.js";
 import { MessageList } from "./message-list.js";
 import { ChatInput } from "./chat-input.js";
 import { InlineActionsList } from "./inline-actions-list.js";
-import { NativeTemplateModal } from "./native-template-modal.js";
 import { useThreadHeader } from "./thread-context.js";
 import { getPendingThreadActions } from "./thread-action-registry.js";
 import type {
@@ -153,8 +152,6 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
     };
   }, [clearHighlights]);
 
-  // Modal state for native template actions
-  const [modalAction, setModalAction] = useState<ThreadAction | null>(null);
   const [successToast, setSuccessToast] = useState<string | null>(null);
   const [errorToast, setErrorToast] = useState<string | null>(null);
 
@@ -553,10 +550,8 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
     emit({ type: "message_sent", threadId: thread.id, content });
   }, [thread.id, emit]);
 
-  const handleRunAction = useCallback((action: ThreadAction) => {
-    if (action.native_template?.component) {
-      setModalAction(action);
-    }
+  const handleRunAction = useCallback((_action: ThreadAction) => {
+    // No-op: native template modal removed. Actions are handled via links.
   }, []);
 
   const handleDismissAction = useCallback(
@@ -567,9 +562,6 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
 
       setActions((prev) =>
         prev.filter((candidate) => candidate.id !== action.id),
-      );
-      setModalAction((current: ThreadAction | null) =>
-        current?.id === action.id ? null : current,
       );
 
       try {
@@ -607,48 +599,12 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
     [client, thread.id, emit],
   );
 
-  const handleCompleteAction = useCallback(
-    async (payload: Record<string, unknown>) => {
-      if (!modalAction?.id) {
-        throw new Error("No action to complete");
-      }
-
-      const actionType = modalAction.type;
-
-      await client.http.request(
-        `/api/v1/threads/${thread.id}/actions/${modalAction.id}/complete`,
-        { method: "POST", body: payload },
-      );
-
-      const result = await client.http.request<{ data: ThreadAction[] }>(
-        `/api/v1/threads/${thread.id}/actions`,
-      );
-      setActions(result?.data ?? []);
-
-      emit({
-        type: "action_completed",
-        threadId: thread.id,
-        actionId: modalAction.id,
-        actionType,
-      });
-
-      const toastMessage =
-        actionType === "send_email" ? "Email sent" : "Action completed";
-      setSuccessToast(toastMessage);
-      setTimeout(() => setSuccessToast(null), 3000);
-    },
-    [client, thread.id, modalAction, emit],
-  );
-
   // -------------------------------------------------------------------------
-  // Header actions (non-native-template)
+  // Header actions
   // -------------------------------------------------------------------------
 
   const headerActions = useMemo(
-    () =>
-      getPendingThreadActions(actions).filter(
-        (action) => !action.native_template?.component,
-      ),
+    () => getPendingThreadActions(actions),
     [actions],
   );
 
@@ -1058,15 +1014,6 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
           />
         </div>
       </div>
-
-      {/* Native template modal */}
-      <NativeTemplateModal
-        open={modalAction !== null}
-        action={modalAction}
-        thread={thread}
-        onClose={() => setModalAction(null)}
-        onComplete={handleCompleteAction}
-      />
 
       {/* Success toast */}
       {successToast && (

@@ -250,18 +250,6 @@ export interface InlineActionsListProps {
 }
 
 // ---------------------------------------------------------------------------
-// NativeTemplateModal props
-// ---------------------------------------------------------------------------
-
-export interface NativeTemplateModalProps {
-  open: boolean;
-  action: ThreadAction | null;
-  thread: Thread | null;
-  onClose: () => void;
-  onComplete?: (payload: Record<string, unknown>) => Promise<void>;
-}
-
-// ---------------------------------------------------------------------------
 // CSS variable reference (for theming documentation)
 // ---------------------------------------------------------------------------
 // Components use CSS custom properties for colors. Set these in your app's

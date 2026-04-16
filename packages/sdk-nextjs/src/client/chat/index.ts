@@ -4,7 +4,6 @@ export { ChatInput } from "./chat-input.js";
 export { MessageList } from "./message-list.js";
 export { InlineActionCard } from "./inline-action-card.js";
 export { InlineActionsList } from "./inline-actions-list.js";
-export { NativeTemplateModal } from "./native-template-modal.js";
 
 // Context
 export {
@@ -37,7 +36,6 @@ export type {
   MessageListProps,
   InlineActionCardProps,
   InlineActionsListProps,
-  NativeTemplateModalProps,
   ChatLifecycleEvent,
   MessageRendererContext,
   DefaultMessageRenderer,
