@@ -1,0 +1,212 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: #fafafa;
+  min-height: 100vh;
+}
+
+main {
+  padding: 2rem;
+}
+
+/* Login form */
+.login-form {
+  max-width: 400px;
+  margin: 2rem auto;
+  padding: 2rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background: white;
+}
+
+.login-form h2 {
+  margin: 0 0 0.5rem;
+}
+
+.login-form p {
+  color: #666;
+  margin: 0 0 1.5rem;
+}
+
+.login-form label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.login-form input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+.login-form input:focus {
+  outline: none;
+  border-color: #0070f3;
+}
+
+.login-form button {
+  width: 100%;
+  padding: 0.75rem;
+  background: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+}
+
+.login-form button:hover:not(:disabled) {
+  background: #0060df;
+}
+
+.login-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-form button.secondary {
+  background: transparent;
+  color: #666;
+  border: 1px solid #ddd;
+}
+
+.login-form button.secondary:hover:not(:disabled) {
+  background: #f5f5f5;
+}
+
+.login-form .error {
+  color: #e00;
+  font-size: 0.875rem;
+  margin: 0 0 1rem;
+}
+
+/* Thread list */
+.thread-list-page {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.thread-list-page header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.thread-list-page header h1 {
+  margin: 0;
+}
+
+.thread-list-page header button {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: #666;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.thread-list-page header button:hover {
+  background: #f5f5f5;
+}
+
+.thread-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.thread-card {
+  padding: 1.25rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background: white;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  display: block;
+}
+
+.thread-card:hover {
+  border-color: #0070f3;
+  box-shadow: 0 2px 8px rgba(0, 112, 243, 0.1);
+}
+
+.thread-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.thread-card p {
+  margin: 0 0 0.75rem;
+  color: #666;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.thread-card .meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.thread-card .meta .badge {
+  padding: 0.15rem 0.5rem;
+  background: #eef;
+  color: #44a;
+  border-radius: 12px;
+  font-size: 0.75rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #999;
+}
+
+/* Thread chat page */
+.thread-chat-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding-bottom: 6rem;
+}
+
+.thread-chat-page .back-link {
+  display: inline-block;
+  margin-bottom: 1rem;
+  color: #0070f3;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.thread-chat-page .back-link:hover {
+  text-decoration: underline;
+}
+
+.thread-chat-page .thread-header {
+  margin-bottom: 1.5rem;
+}
+
+.thread-chat-page .thread-header h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+}
+
+.thread-chat-page .thread-header p {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+}
