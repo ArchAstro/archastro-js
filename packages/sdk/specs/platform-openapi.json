@@ -4131,8 +4131,12 @@
             "description": "Stripe customer ID",
             "type": "string"
           },
+          "pending_plan": {
+            "description": "Plan change awaiting Stripe confirmation, or __clear__ to remove plan",
+            "type": "string"
+          },
           "plan": {
-            "description": "Billing plan (e.g. paygo)",
+            "description": "Active billing plan (e.g. paygo)",
             "type": "string"
           }
         },
@@ -5918,8 +5922,12 @@
             "description": "Stripe customer ID",
             "type": "string"
           },
+          "pending_plan": {
+            "description": "Plan change awaiting Stripe confirmation, or __clear__ to remove plan",
+            "type": "string"
+          },
           "plan": {
-            "description": "Billing plan (e.g. enterprise-pilot)",
+            "description": "Active billing plan (e.g. enterprise-pilot)",
             "type": "string"
           },
           "primary_user": {
@@ -21488,10 +21496,215 @@
   ],
   "x-channels": [
     {
+      "description": "Channel for real-time custom object collaboration.\n\nClients join `api:object:{object_id}` to receive the current object state\nand subscribe to field-level updates. Mutations are sent as key:value maps.\n",
+      "joins": [
+        {
+          "description": null,
+          "name": "join_by_id",
+          "params": {
+            "properties": {
+              "object_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "object_id"
+            ],
+            "type": "object"
+          },
+          "pattern": "api:object:{object_id}",
+          "returns": {
+            "type": "object"
+          }
+        },
+        {
+          "description": null,
+          "name": "join_by_row_key",
+          "params": {
+            "properties": {
+              "row_key": {
+                "type": "string"
+              },
+              "schema_type": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema_type",
+              "row_key"
+            ],
+            "type": "object"
+          },
+          "pattern": "api:object:{schema_type}:{row_key}",
+          "returns": {
+            "type": "object"
+          }
+        }
+      ],
+      "messages": [
+        {
+          "description": null,
+          "event": "update_fields",
+          "params": {
+            "properties": {
+              "fields": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "fields"
+            ],
+            "type": "object"
+          },
+          "returns": {
+            "type": "object"
+          }
+        },
+        {
+          "description": null,
+          "event": "save",
+          "params": {
+            "properties": {},
+            "type": "object"
+          },
+          "returns": {
+            "type": "object"
+          }
+        }
+      ],
+      "name": "ApiObjectChannel",
+      "pushes": [
+        {
+          "description": null,
+          "event": "object_updated",
+          "payload": {
+            "properties": {
+              "fields": {
+                "type": "object"
+              },
+              "id": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "description": null,
+          "event": "object_created",
+          "payload": {
+            "properties": {
+              "fields": {
+                "type": "object"
+              },
+              "id": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        }
+      ],
+      "x-auth": [
+        "bearer"
+      ]
+    },
+    {
+      "description": "Phoenix channel for real-time activity feed updates.\n\nClients join a topic scoped to an agent or org and receive\n`new_entry` events as feed entries are created.\n\n## Topics\n\n  * `\"api:activity_feed:agent:{agent_user_id}\"` — entries for a specific agent\n  * `\"api:activity_feed:org:{org_id}\"` — entries for an entire org/tenant\n",
+      "joins": [
+        {
+          "description": "Join an agent-scoped activity feed",
+          "name": "join_agent",
+          "params": {
+            "properties": {
+              "agent_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "agent_id"
+            ],
+            "type": "object"
+          },
+          "pattern": "api:activity_feed:agent:{agent_id}",
+          "returns": {
+            "type": "object"
+          }
+        },
+        {
+          "description": "Join an org-scoped activity feed",
+          "name": "join_org",
+          "params": {
+            "properties": {
+              "org_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "org_id"
+            ],
+            "type": "object"
+          },
+          "pattern": "api:activity_feed:org:{org_id}",
+          "returns": {
+            "type": "object"
+          }
+        }
+      ],
+      "messages": [
+        {
+          "description": "List activity feed entries with cursor-based pagination",
+          "event": "list_entries",
+          "params": {
+            "properties": {
+              "after_cursor": {
+                "type": "string"
+              },
+              "before_cursor": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "level": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer"
+              }
+            },
+            "type": "object"
+          },
+          "returns": {
+            "type": "object"
+          }
+        }
+      ],
+      "name": "ApiActivityFeedChannel",
+      "pushes": [
+        {
+          "description": null,
+          "event": "new_entry",
+          "payload": {
+            "properties": {
+              "entry": {
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        }
+      ],
+      "x-auth": [
+        "bearer"
+      ]
+    },
+    {
       "description": "Channel for real-time chat messaging.\n\nSupports team-scoped and user-scoped threads with keyed, transient, and direct\nthread access patterns.\n",
       "joins": [
         {
           "description": "Join a team-scoped thread by ID",
+          "name": "join_team_thread",
           "params": {
             "properties": {
               "after_cursor": {
@@ -21526,6 +21739,7 @@
         },
         {
           "description": "Join or create a team-scoped keyed thread",
+          "name": "join_team_keyed",
           "params": {
             "properties": {
               "after_cursor": {
@@ -21560,6 +21774,7 @@
         },
         {
           "description": "Join a team-scoped transient (ephemeral) thread",
+          "name": "join_team_transient",
           "params": {
             "properties": {
               "after_cursor": {
@@ -21594,6 +21809,7 @@
         },
         {
           "description": "Join a user-scoped thread by ID",
+          "name": "join_user_thread",
           "params": {
             "properties": {
               "after_cursor": {
@@ -21624,6 +21840,7 @@
         },
         {
           "description": "Join or create a user-scoped keyed thread",
+          "name": "join_user_keyed",
           "params": {
             "properties": {
               "after_cursor": {
@@ -21654,6 +21871,7 @@
         },
         {
           "description": "Join a user-scoped transient (ephemeral) thread",
+          "name": "join_user_transient",
           "params": {
             "properties": {
               "after_cursor": {
@@ -22701,206 +22919,6 @@
             "properties": {
               "event": {
                 "type": "object"
-              }
-            },
-            "type": "object"
-          }
-        }
-      ],
-      "x-auth": [
-        "bearer"
-      ]
-    },
-    {
-      "description": "Phoenix channel for real-time activity feed updates.\n\nClients join a topic scoped to an agent or org and receive\n`new_entry` events as feed entries are created.\n\n## Topics\n\n  * `\"api:activity_feed:agent:{agent_user_id}\"` — entries for a specific agent\n  * `\"api:activity_feed:org:{org_id}\"` — entries for an entire org/tenant\n",
-      "joins": [
-        {
-          "description": "Join an agent-scoped activity feed",
-          "params": {
-            "properties": {
-              "agent_id": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "agent_id"
-            ],
-            "type": "object"
-          },
-          "pattern": "api:activity_feed:agent:{agent_id}",
-          "returns": {
-            "type": "object"
-          }
-        },
-        {
-          "description": "Join an org-scoped activity feed",
-          "params": {
-            "properties": {
-              "org_id": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "org_id"
-            ],
-            "type": "object"
-          },
-          "pattern": "api:activity_feed:org:{org_id}",
-          "returns": {
-            "type": "object"
-          }
-        }
-      ],
-      "messages": [
-        {
-          "description": "List activity feed entries with cursor-based pagination",
-          "event": "list_entries",
-          "params": {
-            "properties": {
-              "after_cursor": {
-                "type": "string"
-              },
-              "before_cursor": {
-                "type": "string"
-              },
-              "kind": {
-                "type": "string"
-              },
-              "level": {
-                "type": "string"
-              },
-              "limit": {
-                "type": "integer"
-              }
-            },
-            "type": "object"
-          },
-          "returns": {
-            "type": "object"
-          }
-        }
-      ],
-      "name": "ApiActivityFeedChannel",
-      "pushes": [
-        {
-          "description": null,
-          "event": "new_entry",
-          "payload": {
-            "properties": {
-              "entry": {
-                "type": "object"
-              }
-            },
-            "type": "object"
-          }
-        }
-      ],
-      "x-auth": [
-        "bearer"
-      ]
-    },
-    {
-      "description": "Channel for real-time custom object collaboration.\n\nClients join `api:object:{object_id}` to receive the current object state\nand subscribe to field-level updates. Mutations are sent as key:value maps.\n",
-      "joins": [
-        {
-          "description": null,
-          "params": {
-            "properties": {
-              "object_id": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "object_id"
-            ],
-            "type": "object"
-          },
-          "pattern": "api:object:{object_id}",
-          "returns": {
-            "type": "object"
-          }
-        },
-        {
-          "description": null,
-          "params": {
-            "properties": {
-              "row_key": {
-                "type": "string"
-              },
-              "schema_type": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "schema_type",
-              "row_key"
-            ],
-            "type": "object"
-          },
-          "pattern": "api:object:{schema_type}:{row_key}",
-          "returns": {
-            "type": "object"
-          }
-        }
-      ],
-      "messages": [
-        {
-          "description": null,
-          "event": "update_fields",
-          "params": {
-            "properties": {
-              "fields": {
-                "type": "object"
-              }
-            },
-            "required": [
-              "fields"
-            ],
-            "type": "object"
-          },
-          "returns": {
-            "type": "object"
-          }
-        },
-        {
-          "description": null,
-          "event": "save",
-          "params": {
-            "properties": {},
-            "type": "object"
-          },
-          "returns": {
-            "type": "object"
-          }
-        }
-      ],
-      "name": "ApiObjectChannel",
-      "pushes": [
-        {
-          "description": null,
-          "event": "object_updated",
-          "payload": {
-            "properties": {
-              "fields": {
-                "type": "object"
-              },
-              "id": {
-                "type": "string"
-              }
-            },
-            "type": "object"
-          }
-        },
-        {
-          "description": null,
-          "event": "object_created",
-          "payload": {
-            "properties": {
-              "fields": {
-                "type": "object"
-              },
-              "id": {
-                "type": "string"
               }
             },
             "type": "object"

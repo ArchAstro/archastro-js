@@ -61,9 +61,9 @@ async function withJoinTimeout<T>(
 
 function buildTopic(threadOwner: ThreadOwnerScope, threadId: string): string {
   if (threadOwner.type === "team") {
-    return ApiChatChannel.topic1(threadOwner.teamId, threadId);
+    return ApiChatChannel.topicTeamThread(threadOwner.teamId, threadId);
   }
-  return ApiChatChannel.topic4(threadId);
+  return ApiChatChannel.topicUserThread(threadId);
 }
 
 const UNKNOWN_JUMP_TARGET = "unknown";
