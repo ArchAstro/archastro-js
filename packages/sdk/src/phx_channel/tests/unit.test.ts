@@ -37,7 +37,7 @@ function createMockSocket() {
 async function joinedChannel() {
   const socket = createMockSocket();
   const ch = new Channel(socket as any, "test:topic", {});
-  const joinPromise = ch.join(500);
+  const joinPromise = ch.join(undefined, { timeoutMs: 500 });
   const [joinRef, ref] = socket.sent[0]!;
   ch.onMessage(joinRef as string, ref as string, "phx_reply", {
     status: "ok",
@@ -191,7 +191,7 @@ describe("Channel state machine", () => {
     const socket = createMockSocket();
     const ch = new Channel(socket as any, "test:topic", { key: "val" });
 
-    const joinPromise = ch.join(500);
+    const joinPromise = ch.join(undefined, { timeoutMs: 500 });
 
     expect(socket.sent).toHaveLength(1);
     const [joinRef, ref, topic, event, payload] = socket.sent[0]!;
@@ -213,14 +213,14 @@ describe("Channel state machine", () => {
 
   it("returns {} immediately when already joined", async () => {
     const { ch } = await joinedChannel();
-    const response = await ch.join(500);
+    const response = await ch.join(undefined, { timeoutMs: 500 });
     expect(response).toEqual({});
   });
 
   it("transitions to errored on join rejection", async () => {
     const socket = createMockSocket();
     const ch = new Channel(socket as any, "test:topic", {});
-    const joinPromise = ch.join(500);
+    const joinPromise = ch.join(undefined, { timeoutMs: 500 });
     const [joinRef, ref] = socket.sent[0]!;
 
     ch.onMessage(joinRef as string, ref as string, "phx_reply", {
@@ -236,7 +236,7 @@ describe("Channel state machine", () => {
   it("times out on join if no reply", async () => {
     const socket = createMockSocket();
     const ch = new Channel(socket as any, "test:topic", {});
-    await expect(ch.join(50)).rejects.toThrow("timed out");
+    await expect(ch.join(undefined, { timeoutMs: 50 })).rejects.toThrow("timed out");
   });
 
   it("transitions to closed on phx_close", async () => {
@@ -432,7 +432,7 @@ describe("Channel push buffering", () => {
 
     const pushPromise = ch.push("buffered_event", { n: 1 }, 2000);
 
-    const joinPromise = ch.join(2000);
+    const joinPromise = ch.join(undefined, { timeoutMs: 2000 });
     const [joinRef, joinRefVal] = socket.sent[0]!;
     ch.onMessage(joinRef as string, joinRefVal as string, "phx_reply", {
       status: "ok",
@@ -462,7 +462,7 @@ describe("Channel push buffering", () => {
     const pushPromise = ch.push("custom_timeout", { n: 1 }, 500);
 
     // Join quickly
-    const joinPromise = ch.join(2000);
+    const joinPromise = ch.join(undefined, { timeoutMs: 2000 });
     const [joinRef, joinRefVal] = socket.sent[0]!;
     ch.onMessage(joinRef as string, joinRefVal as string, "phx_reply", {
       status: "ok",
@@ -500,7 +500,7 @@ describe("Channel push buffering", () => {
     const pushPromise = ch.push("slow_buf", { n: 1 }, 500);
 
     // Join quickly
-    const joinPromise = ch.join(2000);
+    const joinPromise = ch.join(undefined, { timeoutMs: 2000 });
     const [joinRef, joinRefVal] = socket.sent[0]!;
     ch.onMessage(joinRef as string, joinRefVal as string, "phx_reply", {
       status: "ok",

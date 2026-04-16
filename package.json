@@ -4,6 +4,7 @@
   "workspaces": ["packages/*"],
   "scripts": {
     "build": "npm run build -w packages/sdk && npm run build -w packages/sdk-nextjs",
+    "lint": "npm run lint --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "test:contract": "npm run test:contract -w packages/sdk",
     "clean": "npm run clean --workspaces --if-present"
