@@ -93,10 +93,6 @@ vi.mock("react-markdown", () => ({
 vi.mock("remark-gfm", () => ({ default: {} }));
 vi.mock("rehype-highlight", () => ({ default: {} }));
 vi.mock("remove-markdown", () => ({ default: (s: string) => s }));
-vi.mock("@archastro/native-templates-core", () => ({}));
-vi.mock("@archastro/native-templates-react", () => ({
-  NativeTemplateRenderer: () => <div data-testid="native-renderer" />,
-}));
 
 import { ChatThread } from "../chat-thread.js";
 import { SDKProvider } from "../../hooks.js";
