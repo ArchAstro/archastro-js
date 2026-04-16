@@ -62,10 +62,10 @@ vi.mock("@archastro/sdk", () => ({
     http = { request: mockHttpRequest };
   },
   ApiChatChannel: class {
-    static topic1(teamId: string, threadId: string) {
+    static topicTeamThread(teamId: string, threadId: string) {
       return `api:chat:team:${teamId}:thread:${threadId}`;
     }
-    static topic4(threadId: string) {
+    static topicUserThread(threadId: string) {
       return `api:chat:user:thread:${threadId}`;
     }
     constructor() {}
