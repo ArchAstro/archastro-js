@@ -1,0 +1,192 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: #fafafa;
+  min-height: 100vh;
+}
+
+main {
+  padding: 2rem;
+}
+
+.login-form {
+  max-width: 400px;
+  margin: 2rem auto;
+  padding: 2rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background: white;
+}
+
+.login-form h2 {
+  margin: 0 0 0.5rem;
+}
+
+.login-form p {
+  color: #666;
+  margin: 0 0 1.5rem;
+}
+
+.login-form label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.login-form input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+.login-form input:focus {
+  outline: none;
+  border-color: #0070f3;
+}
+
+.login-form button {
+  width: 100%;
+  padding: 0.75rem;
+  background: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+}
+
+.login-form button:hover:not(:disabled) {
+  background: #0060df;
+}
+
+.login-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-form button.secondary {
+  background: transparent;
+  color: #666;
+  border: 1px solid #ddd;
+}
+
+.login-form button.secondary:hover:not(:disabled) {
+  background: #f5f5f5;
+}
+
+.login-form .error {
+  color: #e00;
+  font-size: 0.875rem;
+  margin: 0 0 1rem;
+}
+
+/* Federated Login Styles */
+.login-form .federated-login {
+  margin-top: 1.5rem;
+}
+
+.login-form .divider {
+  position: relative;
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.login-form .divider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  border-top: 1px solid #e5e5e5;
+}
+
+.login-form .divider span {
+  position: relative;
+  background: white;
+  padding: 0 0.75rem;
+  color: #888;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+}
+
+.login-form .federated-form {
+  margin-bottom: 0.5rem;
+}
+
+.login-form .federated-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: white;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.login-form .federated-button:hover:not(:disabled) {
+  background: #f5f5f5;
+}
+
+.login-form .federated-button .icon {
+  width: 18px;
+  height: 18px;
+}
+
+.user-profile {
+  text-align: center;
+  padding: 2rem;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.user-profile .avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #0070f3;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0 auto 1rem;
+  overflow: hidden;
+}
+
+.user-profile .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-profile h3 {
+  margin: 0 0 0.25rem;
+}
+
+.user-profile p {
+  color: #666;
+  margin: 0 0 1.5rem;
+}
+
+.user-profile button {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: #666;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.user-profile button:hover {
+  background: #f5f5f5;
+}

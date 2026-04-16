@@ -1,9 +1,12 @@
 {
   "name": "archastro-js",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": ["packages/*", "examples/*"],
   "scripts": {
     "build": "npm run build -w packages/sdk && npm run build -w packages/sdk-nextjs",
+    "build:examples": "npm run build -w examples/nextjs-auth && npm run build -w examples/nextjs-agent-threads",
+    "dev:auth": "npm run dev -w examples/nextjs-auth",
+    "dev:threads": "npm run dev -w examples/nextjs-agent-threads",
     "lint": "npm run lint --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "test:contract": "npm run test:contract -w packages/sdk",
