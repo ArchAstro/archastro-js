@@ -11,7 +11,7 @@ import {
 } from "react";
 import type { Message, ThreadAction } from "@archastro/sdk";
 import { ApiChatChannel } from "@archastro/sdk";
-import type { Channel } from "@archastro/sdk/dist/phx_channel/channel.js";
+import type { Socket } from "@archastro/sdk/dist/phx_channel/socket.js";
 import { useClient, useCurrentUser, useSocket } from "../hooks.js";
 import { MessageList } from "./message-list.js";
 import { ChatInput } from "./chat-input.js";
@@ -59,11 +59,19 @@ async function withJoinTimeout<T>(
   }
 }
 
-function buildTopic(threadOwner: ThreadOwnerScope, threadId: string): string {
-  if (threadOwner.type === "team") {
-    return ApiChatChannel.topicTeamThread(threadOwner.teamId, threadId);
-  }
-  return ApiChatChannel.topicUserThread(threadId);
+/**
+ * Join the chat channel for this thread via the generated static `join*`
+ * methods — keeps topic construction + payload shape type-safe so spec
+ * changes surface as build errors, not silent wire renames.
+ */
+function joinChat(
+  socket: Socket,
+  threadOwner: ThreadOwnerScope,
+  threadId: string,
+): Promise<ApiChatChannel> {
+  return threadOwner.type === "team"
+    ? ApiChatChannel.joinTeamThread(socket, threadOwner.teamId, threadId)
+    : ApiChatChannel.joinUserThread(socket, threadId);
 }
 
 const UNKNOWN_JUMP_TARGET = "unknown";
@@ -92,7 +100,6 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const messagesRef = useRef<Message[]>(initialMessages);
-  const channelRef = useRef<Channel | null>(null);
   const chatChannelRef = useRef<ApiChatChannel | null>(null);
   const isFirstActionsLoadRef = useRef(true);
   const isConnectedRef = useRef<boolean>(false);
@@ -172,20 +179,24 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
     let unsubMessageUpdated: (() => void) | null = null;
     let unsubThreadEvent: (() => void) | null = null;
 
-    const topic = buildTopic(threadOwner, thread.id);
-
     const connect = async () => {
       try {
         if (!socket.isConnected) {
           await socket.connect();
         }
 
-        const channel = socket.channel(topic);
-        channelRef.current = channel;
-        const chatChannel = new ApiChatChannel(channel);
+        const chatChannel = await withJoinTimeout(
+          joinChat(socket, threadOwner, thread.id),
+          JOIN_TIMEOUT_MS,
+        );
+
+        if (!mounted) {
+          chatChannel.leave().catch(() => {});
+          return;
+        }
+
         chatChannelRef.current = chatChannel;
 
-        // Wire up event handlers
         unsubMessageAdded = chatChannel.onMessageAdded((payload: unknown) => {
           if (!mounted) return;
           const data = payload as { message?: Message };
@@ -215,23 +226,16 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
           }
         });
 
-        // Join the channel
+        setIsConnected(true);
+        setConnectionError(null);
+        emit({ type: "connected", threadId: thread.id });
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const joinResponse: any = await withJoinTimeout(
-          channel.join(),
-          JOIN_TIMEOUT_MS,
-        );
-
-        if (mounted) {
-          setIsConnected(true);
-          setConnectionError(null);
-          emit({ type: "connected", threadId: thread.id });
-
-          if (joinResponse?.paginated_messages?.messages) {
-            setMessages(joinResponse.paginated_messages.messages);
-            beforeCursorRef.current = joinResponse.paginated_messages.before_cursor;
-            hasMoreBeforeRef.current = Boolean(joinResponse.paginated_messages.before_cursor);
-          }
+        const joinResponse = chatChannel.joinResponse as any;
+        if (joinResponse?.paginated_messages?.messages) {
+          setMessages(joinResponse.paginated_messages.messages);
+          beforeCursorRef.current = joinResponse.paginated_messages.before_cursor;
+          hasMoreBeforeRef.current = Boolean(joinResponse.paginated_messages.before_cursor);
         }
       } catch (error) {
         console.error("[chat-thread] Failed to join thread:", error);
@@ -254,11 +258,10 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
       unsubMessageAdded?.();
       unsubMessageUpdated?.();
       unsubThreadEvent?.();
-      const ch = channelRef.current;
-      if (ch) {
-        ch.leave().catch(() => {});
+      const cc = chatChannelRef.current;
+      if (cc) {
+        cc.leave().catch(() => {});
       }
-      channelRef.current = null;
       chatChannelRef.current = null;
       if (retryTimerRef.current) {
         clearTimeout(retryTimerRef.current);
@@ -305,22 +308,17 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
       lastRejoinAttemptAtRef.current = now;
 
       try {
-        // Leave old channel and create fresh one
-        const oldChannel = channelRef.current;
-        if (oldChannel) {
-          try { await oldChannel.leave(); } catch { /* ignore */ }
+        // Leave old channel and join a fresh one
+        const oldChatChannel = chatChannelRef.current;
+        if (oldChatChannel) {
+          try { await oldChatChannel.leave(); } catch { /* ignore */ }
         }
 
-        const topic = buildTopic(threadOwner, thread.id);
-        const channel = socket.channel(topic);
-        channelRef.current = channel;
-        chatChannelRef.current = new ApiChatChannel(channel);
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const joinResponse: any = await withJoinTimeout(
-          channel.join(),
+        const chatChannel = await withJoinTimeout(
+          joinChat(socket, threadOwner, thread.id),
           JOIN_TIMEOUT_MS,
         );
+        chatChannelRef.current = chatChannel;
 
         setIsConnected(true);
         setConnectionError(null);
@@ -331,6 +329,8 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
           retryTimerRef.current = null;
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const joinResponse = chatChannel.joinResponse as any;
         if (joinResponse?.paginated_messages?.messages) {
           setMessages(joinResponse.paginated_messages.messages);
           beforeCursorRef.current = joinResponse.paginated_messages.before_cursor;

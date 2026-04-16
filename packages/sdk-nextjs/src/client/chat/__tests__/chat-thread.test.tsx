@@ -56,19 +56,52 @@ vi.mock("@archastro/sdk/dist/phx_channel/socket.js", () => ({
 const mockHttpRequest = vi.fn();
 const mockUsersMe = vi.fn();
 
-vi.mock("@archastro/sdk", () => ({
-  PlatformClient: class {
-    users = { me: mockUsersMe };
-    http = { request: mockHttpRequest };
-  },
-  ApiChatChannel: class {
+// Mirrors the generated ApiChatChannel's join flow: open a channel on the
+// socket, call channel.join(payload), return a wrapped instance. Keeping
+// this behavior in the mock is what lets the chat component exercise the
+// generated static join* methods under test. The class is defined INSIDE
+// the factory so it survives vitest's vi.mock hoisting.
+vi.mock("@archastro/sdk", () => {
+  class MockApiChatChannel {
     static topicTeamThread(teamId: string, threadId: string) {
       return `api:chat:team:${teamId}:thread:${threadId}`;
     }
     static topicUserThread(threadId: string) {
       return `api:chat:user:thread:${threadId}`;
     }
-    constructor() {}
+    static async joinTeamThread(
+      socket: { channel: (topic: string) => { join: (...args: unknown[]) => Promise<unknown> } },
+      teamId: string,
+      threadId: string,
+      payload?: unknown,
+    ) {
+      const topic = MockApiChatChannel.topicTeamThread(teamId, threadId);
+      const channel = socket.channel(topic);
+      const joinResponse = await channel.join(payload);
+      return new MockApiChatChannel(channel, joinResponse);
+    }
+    static async joinUserThread(
+      socket: { channel: (topic: string) => { join: (...args: unknown[]) => Promise<unknown> } },
+      threadId: string,
+      payload?: unknown,
+    ) {
+      const topic = MockApiChatChannel.topicUserThread(threadId);
+      const channel = socket.channel(topic);
+      const joinResponse = await channel.join(payload);
+      return new MockApiChatChannel(channel, joinResponse);
+    }
+    public readonly joinResponse: unknown;
+    private _channel: { leave?: () => Promise<void> };
+    constructor(
+      channel: { leave?: () => Promise<void> } = {},
+      joinResponse: unknown = undefined,
+    ) {
+      this._channel = channel;
+      this.joinResponse = joinResponse;
+    }
+    async leave() {
+      await this._channel.leave?.();
+    }
     onMessageAdded(cb: (p: unknown) => void) {
       return mockChannelOn("message_added", cb);
     }
@@ -83,8 +116,16 @@ vi.mock("@archastro/sdk", () => ({
     }
     apiChatPostSimpleMessage = mockPush;
     apiChatLoadMoreMessages = mockPush;
-  },
-}));
+  }
+
+  return {
+    PlatformClient: class {
+      users = { me: mockUsersMe };
+      http = { request: mockHttpRequest };
+    },
+    ApiChatChannel: MockApiChatChannel,
+  };
+});
 
 // Mock react-markdown and optional peer deps
 vi.mock("react-markdown", () => ({

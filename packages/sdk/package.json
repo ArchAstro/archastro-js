@@ -11,6 +11,7 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
+    "lint": "tsc --noEmit",
     "prepublishOnly": "npm run build",
     "test": "vitest run",
     "test:contract": "vitest run --config __tests__/contract/vitest.contract.config.ts"

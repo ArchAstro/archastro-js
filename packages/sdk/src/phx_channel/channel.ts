@@ -4,6 +4,16 @@
 
 import type { Socket } from "./socket.js";
 
+/**
+ * Per-call overrides for a join. Kept as an options object so new knobs
+ * (rejoin policy, headers, etc.) can be added without another positional
+ * argument in generated SDK call sites.
+ */
+export interface JoinOptions {
+  /** Override the socket's default reply timeout for this join. */
+  timeoutMs?: number;
+}
+
 export class ChannelError extends Error {
   constructor(message: string) {
     super(message);
@@ -54,10 +64,13 @@ export class Channel {
 
   // ─── Join / Leave ─────────────────────────────────────────
 
-  async join(timeoutMs?: number): Promise<Record<string, unknown>> {
+  async join(
+    payload?: Record<string, unknown>,
+    options?: JoinOptions
+  ): Promise<Record<string, unknown>> {
     if (this._state === "joined") return {};
 
-    const timeout = timeoutMs ?? this.socket.timeoutMs;
+    const timeout = options?.timeoutMs ?? this.socket.timeoutMs;
     this._state = "joining";
     const ref = this.socket.makeRef();
     this.joinRef = ref;
@@ -70,9 +83,9 @@ export class Channel {
       }, timeout);
 
       this.pendingReplies.set(ref, {
-        resolve: (payload: unknown) => {
+        resolve: (replyPayload: unknown) => {
           clearTimeout(timer);
-          const p = payload as { status: string; response: Record<string, unknown> };
+          const p = replyPayload as { status: string; response: Record<string, unknown> };
           if (p.status === "ok") {
             this._state = "joined";
             this.flushPushBuffer();
@@ -92,7 +105,7 @@ export class Channel {
         },
       });
 
-      this.socket.send(ref, ref, this.topic, "phx_join", this.params);
+      this.socket.send(ref, ref, this.topic, "phx_join", payload ?? this.params);
     });
   }
 
