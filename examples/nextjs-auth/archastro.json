@@ -1,0 +1,8 @@
+{
+  "app_id": "dap_032RNQbwvAGJLYP1obWwfh",
+  "sandbox_id": "dsb_032RNQbxVSuBOEWBGYfuOL",
+  "configs": {
+    "enabled": true,
+    "directory": "configs"
+  }
+}
