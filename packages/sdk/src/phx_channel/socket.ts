@@ -5,7 +5,6 @@
  * Protocol version: 2.0.0
  */
 
-import { createRequire } from "node:module";
 import { Channel } from "./channel.js";
 
 /** Default reconnect backoff schedule (ms), matching the Phoenix JS client. */
@@ -95,9 +94,9 @@ export class Socket {
 
   private async doConnect(): Promise<void> {
     const url = this.buildUrl();
+    const ws = await this.createWebSocket(url);
 
     return new Promise<void>((resolve, reject) => {
-      const ws = this.createWebSocket(url);
 
       // These handlers manage only the initial connection attempt.
       // Once the connection opens, setupReceive() takes over for
@@ -335,17 +334,30 @@ export class Socket {
 
   // ─── WebSocket factory ────────────────────────────────────
 
-  private createWebSocket(url: string): WebSocketLike {
+  private async createWebSocket(url: string): Promise<WebSocketLike> {
     // Browser or Node >= 22 (has global WebSocket)
     if (typeof globalThis.WebSocket !== "undefined") {
       return new globalThis.WebSocket(url) as unknown as WebSocketLike;
     }
 
-    // Node.js without global WebSocket — use ws package via createRequire (ESM-safe)
-    const require = createRequire(import.meta.url);
-    const WS = require("ws") as new (url: string) => WebSocketLike;
+    // Node.js without global WebSocket — lazy-load `ws`. The Function
+    // constructor hides the import specifier from bundlers so client builds
+    // (Webpack, Turbopack) don't try to resolve `ws` for the browser.
+    const WS = await loadWsCtor();
     return new WS(url);
   }
+}
+
+let wsCtorPromise: Promise<new (url: string) => WebSocketLike> | null = null;
+
+function loadWsCtor(): Promise<new (url: string) => WebSocketLike> {
+  if (!wsCtorPromise) {
+    const dynamicImport = new Function("s", "return import(s)") as (
+      s: string,
+    ) => Promise<{ default: new (url: string) => WebSocketLike }>;
+    wsCtorPromise = dynamicImport("ws").then((m) => m.default);
+  }
+  return wsCtorPromise;
 }
 
 export { Channel, ChannelError } from "./channel.js";
