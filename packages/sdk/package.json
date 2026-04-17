@@ -27,6 +27,7 @@
     "zod": "^3.22.0"
   },
   "devDependencies": {
+    "@archastro/channel-harness": "^0.1.0",
     "@stoplight/prism-cli": "^5.14.2",
     "@types/node": "^22.0.0",
     "@types/ws": "^8.5.0",
