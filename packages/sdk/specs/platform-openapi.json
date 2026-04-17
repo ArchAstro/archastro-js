@@ -15215,7 +15215,7 @@
               "schema": {
                 "properties": {
                   "key": {
-                    "description": "Storage key (from URL path or request body)",
+                    "description": "Storage key",
                     "type": "string"
                   },
                   "value": {
@@ -15224,6 +15224,7 @@
                   }
                 },
                 "required": [
+                  "key",
                   "value"
                 ],
                 "type": "object"
@@ -15335,7 +15336,7 @@
         "operationId": "put_api_v1_kv__key",
         "parameters": [
           {
-            "description": "Storage key (from URL path)",
+            "description": "Storage key",
             "in": "path",
             "name": "key",
             "required": true,
@@ -15349,10 +15350,6 @@
             "application/json": {
               "schema": {
                 "properties": {
-                  "key": {
-                    "description": "Storage key (from URL path)",
-                    "type": "string"
-                  },
                   "value": {
                     "description": "Value to store",
                     "type": "string"
