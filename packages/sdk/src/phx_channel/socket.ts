@@ -94,9 +94,16 @@ export class Socket {
 
   private async doConnect(): Promise<void> {
     const url = this.buildUrl();
-    const ws = await this.createWebSocket(url);
+    // Pre-resolve the `ws` constructor in Node before entering the Promise
+    // executor. Socket instantiation must be synchronous inside the executor
+    // so open/error/close handlers are attached before any events can fire.
+    const useGlobal = typeof globalThis.WebSocket !== "undefined";
+    const WSCtor = useGlobal ? null : await loadWsCtor();
 
     return new Promise<void>((resolve, reject) => {
+      const ws: WebSocketLike = useGlobal
+        ? (new globalThis.WebSocket(url) as unknown as WebSocketLike)
+        : new WSCtor!(url);
 
       // These handlers manage only the initial connection attempt.
       // Once the connection opens, setupReceive() takes over for
@@ -330,21 +337,6 @@ export class Socket {
     for (const listener of this.eventListeners) {
       listener(event);
     }
-  }
-
-  // ─── WebSocket factory ────────────────────────────────────
-
-  private async createWebSocket(url: string): Promise<WebSocketLike> {
-    // Browser or Node >= 22 (has global WebSocket)
-    if (typeof globalThis.WebSocket !== "undefined") {
-      return new globalThis.WebSocket(url) as unknown as WebSocketLike;
-    }
-
-    // Node.js without global WebSocket — lazy-load `ws`. The Function
-    // constructor hides the import specifier from bundlers so client builds
-    // (Webpack, Turbopack) don't try to resolve `ws` for the browser.
-    const WS = await loadWsCtor();
-    return new WS(url);
   }
 }
 
