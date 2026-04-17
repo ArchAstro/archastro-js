@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: read
-  packages: read
 
 jobs:
   test:
@@ -21,11 +20,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          registry-url: https://npm.pkg.github.com
 
       - run: npm ci
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build
         run: npm run build
@@ -51,12 +47,14 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          registry-url: https://npm.pkg.github.com
 
       - run: npm ci
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Contract tests
         run: npm run test:contract
         working-directory: packages/sdk
+        env:
+          # Run the generated channel contract tests, not just REST — they
+          # drive a real @archastro/channel-harness subprocess over
+          # WebSocket + HTTP so we catch protocol regressions in CI.
+          ARCHASTRO_RUN_CHANNEL_CONTRACT_TESTS: "1"
