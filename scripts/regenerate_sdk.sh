@@ -12,8 +12,16 @@
 #
 # Usage:
 #   ./scripts/regenerate_sdk.sh                       # pull spec from main
+#   ./scripts/regenerate_sdk.sh --local /path/to/archastro-openapi
 #   ARCHASTRO_OPENAPI_REF=some-branch ./scripts/regenerate_sdk.sh
 #   ARCHASTRO_SDK_GENERATOR=@archastro/sdk-generator@0.1.0 ./scripts/regenerate_sdk.sh
+#
+# Args:
+#   --local <path>            Path to a local archastro-openapi checkout.
+#                             When set, the spec is copied from
+#                             <path>/specs/platform-openapi.json instead
+#                             of being fetched from GitHub. Mutually
+#                             exclusive with ARCHASTRO_OPENAPI_REF.
 #
 # Env knobs:
 #   ARCHASTRO_OPENAPI_REF     Git ref in archastro-openapi to pull the
@@ -31,6 +39,32 @@ SDK_DIR="$REPO_ROOT/packages/sdk"
 SPEC_DST="$SDK_DIR/specs/platform-openapi.json"
 CONFIG_FILE="$REPO_ROOT/scripts/sdk-generator-config.json"
 
+LOCAL_REPO=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --local)
+      if [[ $# -lt 2 ]]; then
+        echo "--local requires a path argument" >&2
+        exit 2
+      fi
+      LOCAL_REPO="$2"
+      shift 2
+      ;;
+    --local=*)
+      LOCAL_REPO="${1#--local=}"
+      shift
+      ;;
+    -h|--help)
+      sed -n 's/^# \{0,1\}//p' "$0" | sed -n '2,/^$/p'
+      exit 0
+      ;;
+    *)
+      echo "unknown argument: $1" >&2
+      exit 2
+      ;;
+  esac
+done
+
 REF="${ARCHASTRO_OPENAPI_REF:-main}"
 SPEC_URL="https://raw.githubusercontent.com/ArchAstro/archastro-openapi/${REF}/specs/platform-openapi.json"
 SDK_GENERATOR_SPEC="${ARCHASTRO_SDK_GENERATOR:-@archastro/sdk-generator@latest}"
@@ -40,8 +74,18 @@ log() { printf '==> %s\n' "$*"; }
 # ─── 1. Fetch the spec ──────────────────────────────────────────
 
 mkdir -p "$(dirname "$SPEC_DST")"
-log "Fetching spec from $SPEC_URL"
-curl --fail --silent --show-error --location "$SPEC_URL" -o "$SPEC_DST"
+if [[ -n "$LOCAL_REPO" ]]; then
+  SPEC_SRC="$LOCAL_REPO/specs/platform-openapi.json"
+  if [[ ! -f "$SPEC_SRC" ]]; then
+    echo "spec not found at $SPEC_SRC" >&2
+    exit 1
+  fi
+  log "Copying spec from $SPEC_SRC"
+  cp "$SPEC_SRC" "$SPEC_DST"
+else
+  log "Fetching spec from $SPEC_URL"
+  curl --fail --silent --show-error --location "$SPEC_URL" -o "$SPEC_DST"
+fi
 
 # Sanity-check the spec. Pass the path via env var rather than
 # interpolating into the JS string so paths with quotes/spaces are safe.
