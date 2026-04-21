@@ -1,5 +1,21 @@
 import type { ReactNode } from "react";
-import type { Thread, Message, ThreadAction } from "@archastro/sdk";
+import type { Thread, Message } from "@archastro/sdk";
+
+/**
+ * Thread action surfaced to the UI.
+ *
+ * Not part of the public `@archastro/sdk` API surface — defined locally so
+ * sdk-nextjs can render connector prompts, inline confirmations, and account
+ * CTAs without depending on internal platform schemas.
+ */
+export interface ThreadAction {
+  id: string;
+  type: string;
+  status?: string;
+  path?: string;
+  metadata?: Record<string, unknown>;
+  native_template?: { component?: unknown } & Record<string, unknown>;
+}
 
 /** File upload descriptor for chat messages. */
 export interface MessageUploadInput {

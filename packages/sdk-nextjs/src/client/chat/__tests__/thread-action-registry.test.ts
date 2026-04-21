@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { ThreadAction } from "@archastro/sdk";
+import type { ThreadAction } from "../types.js";
 import {
   isPendingThreadAction,
   getPendingThreadActions,

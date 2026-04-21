@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import type { ThreadAction } from "@archastro/sdk";
+import type { ThreadAction } from "../types.js";
 import { InlineActionCard } from "../inline-action-card.js";
 
 function createSendEmailAction(overrides: Partial<ThreadAction> = {}): ThreadAction {

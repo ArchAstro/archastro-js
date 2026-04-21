@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useCallback } from "react";
-import type { ThreadAction } from "@archastro/sdk";
+import type { ThreadAction } from "./types.js";
 
 export interface ThreadHeaderState {
   threadId: string;

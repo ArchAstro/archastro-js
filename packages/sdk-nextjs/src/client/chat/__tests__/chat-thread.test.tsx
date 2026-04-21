@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, act, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { Message, ThreadAction, Thread } from "@archastro/sdk";
+import type { Message, Thread } from "@archastro/sdk";
+import type { ThreadAction } from "../types.js";
 
 // ---------------------------------------------------------------------------
 // Mock Socket + Channel + ApiChatChannel
