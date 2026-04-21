@@ -1,9 +1,8 @@
 "use client";
 
-import type { ThreadAction } from "@archastro/sdk";
 import { InlineActionCard } from "./inline-action-card.js";
 import { isPendingThreadAction } from "./thread-action-registry.js";
-import type { InlineActionsListProps } from "./types.js";
+import type { InlineActionsListProps, ThreadAction } from "./types.js";
 
 function isInlineEligible(action: ThreadAction): boolean {
   return Boolean(action.native_template?.component);

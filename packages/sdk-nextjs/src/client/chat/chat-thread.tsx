@@ -9,7 +9,7 @@ import {
   useImperativeHandle,
   forwardRef,
 } from "react";
-import type { Message, ThreadAction } from "@archastro/sdk";
+import type { Message } from "@archastro/sdk";
 import { ApiChatChannel } from "@archastro/sdk";
 import type { Socket } from "@archastro/sdk/dist/phx_channel/socket.js";
 import { useClient, useCurrentUser, useSocket } from "../hooks.js";
@@ -25,6 +25,7 @@ import type {
   ChatThreadJumpRequest,
   ChatThreadJumpResult,
   MessageUploadInput,
+  ThreadAction,
   ThreadOwnerScope,
 } from "./types.js";
 import {

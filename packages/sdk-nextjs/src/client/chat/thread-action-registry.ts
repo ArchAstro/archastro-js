@@ -1,4 +1,4 @@
-import type { ThreadAction } from "@archastro/sdk";
+import type { ThreadAction } from "./types.js";
 
 export type ThreadActionSurface = "inline" | "thread" | "account";
 
