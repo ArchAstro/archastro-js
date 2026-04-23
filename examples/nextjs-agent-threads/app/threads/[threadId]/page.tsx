@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import type { Message } from "@archastro/sdk";
 import { getServerClient } from "../../../lib/auth";
+import { ShareThreadButton } from "../../../components/ShareThreadButton";
 import { ThreadChat } from "../../../components/ThreadChat";
 
 interface Props {
@@ -44,15 +45,14 @@ export default async function ThreadPage({ params }: Props) {
       </Link>
 
       <div className="thread-header">
-        <h1>{thread.title}</h1>
+        <div className="thread-header-row">
+          <h1>{thread.title}</h1>
+          <ShareThreadButton threadId={thread.id} />
+        </div>
         {thread.description && <p>{thread.description}</p>}
       </div>
 
-      <ThreadChat
-        thread={thread}
-        initialMessages={initialMessages}
-        actions={[]}
-      />
+      <ThreadChat thread={thread} initialMessages={initialMessages} />
     </div>
   );
 }

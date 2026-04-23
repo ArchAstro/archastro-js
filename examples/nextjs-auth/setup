@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# setup — one-shot environment bootstrapper for this example.
+#
+# Assumes you're creating a brand-new app for this sample (rather than
+# reusing an existing one). What it does:
+#
+#   1. Verifies the `archastro` CLI is installed (plus `jq` and `openssl`).
+#   2. Makes sure you're logged in. Runs `archastro auth login` (browser
+#      flow) if `archastro auth status` says you aren't.
+#   3. Runs `archastro init --app-name "…"` which pops the developer
+#      portal in your browser with Create-new-app pre-selected and the
+#      app name pre-filled. The user just clicks Create. Init writes a
+#      fresh archastro.json bound to the new app's `dap_…` id.
+#   4. Mints a fresh publishable key against that new app.
+#   5. Writes a ready-to-use .env with:
+#        - NEXT_PUBLIC_API_BASE_URL=https://platform.archastro.ai
+#        - NEXT_PUBLIC_PUBLISHABLE_KEY=<the pk_… we just minted>
+#        - SESSION_SECRET=<fresh 32-byte base64 secret>
+#      Any existing .env is backed up to .env.bak first.
+#
+# Usage
+#   cd examples/nextjs-auth
+#   ./setup
+
+set -euo pipefail
+
+APP_NAME="Next.js Auth Example"
+
+here="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+cd "$here"
+
+for cmd in archastro jq openssl; do
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "error: required command not found on PATH: $cmd" >&2
+    exit 1
+  fi
+done
+
+if ! archastro auth status >/dev/null 2>&1; then
+  echo "→ Not logged in. Launching browser login…"
+  archastro auth login
+fi
+
+echo "→ Launching portal to create app \"$APP_NAME\"…"
+archastro init --app-name "$APP_NAME" --enable-configs --configs-dir configs --no-samples
+
+echo "→ Minting publishable key for the new app…"
+key_json="$(archastro create appkey -t publishable -o json)"
+pk="$(echo "$key_json" | jq -r '.full_key // empty')"
+if [ -z "$pk" ]; then
+  echo "error: CLI returned no key. Raw output:" >&2
+  echo "$key_json" >&2
+  exit 1
+fi
+
+session_secret="$(openssl rand -base64 32)"
+
+if [ -f .env ]; then
+  cp .env .env.bak
+  echo "→ Backed up existing .env → .env.bak"
+fi
+
+cat > .env <<EOF
+NEXT_PUBLIC_API_BASE_URL=https://platform.archastro.ai
+NEXT_PUBLIC_PUBLISHABLE_KEY=$pk
+
+SESSION_SECRET=$session_secret
+EOF
+
+echo "→ Wrote .env"
+echo "✓ Ready. Run: npm run dev"
