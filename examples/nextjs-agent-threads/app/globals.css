@@ -200,6 +200,13 @@ main {
   margin-bottom: 1.5rem;
 }
 
+.thread-chat-page .thread-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
 .thread-chat-page .thread-header h1 {
   margin: 0 0 0.25rem;
   font-size: 1.5rem;
@@ -209,4 +216,75 @@ main {
   margin: 0;
   color: #666;
   font-size: 0.9rem;
+}
+
+.invite-control button,
+.invite-ready button {
+  padding: 0.4rem 0.85rem;
+  font-size: 0.85rem;
+  border: 1px solid #0070f3;
+  background: #0070f3;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.invite-control button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.invite-control .error {
+  color: #c00;
+  font-size: 0.8rem;
+  margin: 0.4rem 0 0;
+}
+
+.invite-ready {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.invite-ready input {
+  flex: 1;
+  min-width: 18rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.invite-ready button.secondary {
+  background: white;
+  color: #555;
+  border-color: #ccc;
+}
+
+.invite-error-page {
+  max-width: 480px;
+  margin: 4rem auto;
+  padding: 2rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background: white;
+  text-align: center;
+}
+
+.invite-error-page h1 {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+}
+
+.invite-error-page p {
+  color: #666;
+  margin: 0 0 0.75rem;
+}
+
+.invite-error-page .back-link {
+  display: inline-block;
+  margin-top: 1rem;
+  color: #0070f3;
+  text-decoration: none;
 }

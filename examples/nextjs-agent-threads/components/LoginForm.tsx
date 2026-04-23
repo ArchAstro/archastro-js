@@ -7,7 +7,11 @@ import { useRefreshSession } from "@archastro/sdk-nextjs/client";
 
 type Mode = "login" | "register";
 
-export function LoginForm() {
+interface Props {
+  returnTo?: string;
+}
+
+export function LoginForm({ returnTo = "/threads" }: Props = {}) {
   const router = useRouter();
   const refreshSession = useRefreshSession();
 
@@ -36,7 +40,7 @@ export function LoginForm() {
 
       if (result.success) {
         await refreshSession();
-        router.push("/threads");
+        router.push(returnTo);
         router.refresh();
       } else {
         setError(result.error ?? "Something went wrong");
