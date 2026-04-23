@@ -24,7 +24,7 @@ export default async function ThreadPage({ params }: Props) {
   try {
     await client.threads.members.create(threadId, {
       type: "user",
-      user_id: me.id,
+      user: me.id,
       membership_type: "member",
     });
   } catch {

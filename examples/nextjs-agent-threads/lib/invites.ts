@@ -23,7 +23,6 @@ export async function createThreadInvite(
   try {
     const me = await client.users.me();
     const invite = await client.users.invites(me.id, {
-      user: me.id,
       invite: { thread_id: threadId },
     });
 
