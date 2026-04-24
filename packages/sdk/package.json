@@ -19,7 +19,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/archastro/archastro-js.git",
+    "url": "https://github.com/ArchAstro/archastro-js.git",
     "directory": "packages/sdk"
   },
   "dependencies": {
