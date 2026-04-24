@@ -13,6 +13,9 @@ on:
     tags:
       - 'sdk-v*'
       - 'sdk-nextjs-v*'
+  # release.yml dispatches this workflow with --ref <tag> after pushing the
+  # tag, because tags pushed by GITHUB_TOKEN don't themselves trigger runs.
+  workflow_dispatch:
 
 permissions:
   contents: write      # create GitHub Release

@@ -32,6 +32,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  actions: write           # to dispatch publish.yml via `gh workflow run`
 
 jobs:
   release:
@@ -125,6 +126,17 @@ jobs:
             git tag -a "$tag" -m "$tag"
           done
           git push origin --tags
+
+      - name: Dispatch publish.yml for each tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAGS: ${{ steps.bump.outputs.tags }}
+        run: |
+          set -euo pipefail
+          for tag in $TAGS; do
+            echo "Dispatching publish.yml --ref $tag"
+            gh workflow run publish.yml --ref "$tag"
+          done
 
       - name: Open PR with auto-merge
         env:
