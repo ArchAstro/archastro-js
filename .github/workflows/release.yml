@@ -1,0 +1,153 @@
+name: Release
+
+# Manually trigger from the Actions tab to:
+#   1. Bump the selected package's version on a release branch
+#   2. Push a tag (sdk-vX.Y.Z or sdk-nextjs-vX.Y.Z) which triggers publish.yml
+#   3. Open a PR back to main and enable auto-merge so main tracks the bump
+#
+# Publishing uses npm Trusted Publishing (OIDC) — no NPM_TOKEN needed.
+# A package's first publish must be done manually; after that, configure a
+# trusted publisher on npmjs.com pointing at publish.yml.
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Package to release
+        required: true
+        type: choice
+        options:
+          - sdk
+          - sdk-nextjs
+          - both
+      bump:
+        description: Version bump
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release:
+    name: Bump + branch + tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test --workspaces --if-present
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump versions
+        id: bump
+        env:
+          PKG: ${{ inputs.package }}
+          BUMP: ${{ inputs.bump }}
+        run: |
+          set -euo pipefail
+
+          bump_one() {
+            local name="$1"
+            (cd "packages/$name" && npm version "$BUMP" --no-git-tag-version >/dev/null)
+            node -p "require('./packages/$name/package.json').version"
+          }
+
+          tags=()
+          title_parts=()
+
+          if [[ "$PKG" == "sdk" || "$PKG" == "both" ]]; then
+            v=$(bump_one sdk)
+            tags+=("sdk-v$v")
+            title_parts+=("sdk v$v")
+            echo "sdk_version=$v" >> "$GITHUB_OUTPUT"
+          fi
+          if [[ "$PKG" == "sdk-nextjs" || "$PKG" == "both" ]]; then
+            v=$(bump_one sdk-nextjs)
+            tags+=("sdk-nextjs-v$v")
+            title_parts+=("sdk-nextjs v$v")
+            echo "sdk_nextjs_version=$v" >> "$GITHUB_OUTPUT"
+          fi
+
+          tags_str="${tags[*]}"                     # space-separated
+          title_str="${title_parts[0]}"
+          for p in "${title_parts[@]:1}"; do
+            title_str="$title_str + $p"
+          done
+
+          branch="release/${tags_str// /-}"
+          title="release: $title_str"
+
+          {
+            echo "branch=$branch"
+            echo "title=$title"
+            echo "tags=$tags_str"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Commit + push release branch
+        env:
+          BRANCH: ${{ steps.bump.outputs.branch }}
+          TITLE: ${{ steps.bump.outputs.title }}
+        run: |
+          set -euo pipefail
+          git checkout -b "$BRANCH"
+          git add packages/*/package.json package-lock.json
+          git commit -m "$TITLE"
+          git push origin "$BRANCH"
+
+      - name: Create + push tags
+        env:
+          TAGS: ${{ steps.bump.outputs.tags }}
+        run: |
+          set -euo pipefail
+          for tag in $TAGS; do
+            git tag -a "$tag" -m "$tag"
+          done
+          git push origin --tags
+
+      - name: Open PR with auto-merge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ steps.bump.outputs.branch }}
+          TITLE: ${{ steps.bump.outputs.title }}
+          TAGS: ${{ steps.bump.outputs.tags }}
+        run: |
+          set -euo pipefail
+          body=$(cat <<EOF
+          Automated release — version bump opened by \`release.yml\`.
+
+          **Tags pushed** (publish.yml is publishing these right now):
+          $(for t in $TAGS; do echo "- \`$t\`"; done)
+
+          This PR will auto-merge once required checks pass so \`main\`
+          stays in sync with what was published.
+          EOF
+          )
+          pr_url=$(gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "$TITLE" \
+            --body "$body")
+          gh pr merge "$pr_url" --squash --auto --delete-branch
+          echo "Opened $pr_url"

@@ -1,0 +1,93 @@
+name: Publish
+
+# Triggered by the tags that release.yml pushes.
+# Authenticates to npm via OIDC (Trusted Publishing) — no NPM_TOKEN.
+#
+# Prereqs (one-time, per package):
+#   1. First publish done manually from a laptop (npm publish --access public)
+#   2. Trusted publisher configured at npmjs.com/package/<name>/access
+#      pointing at this workflow filename (publish.yml)
+
+on:
+  push:
+    tags:
+      - 'sdk-v*'
+      - 'sdk-nextjs-v*'
+
+permissions:
+  contents: write      # create GitHub Release
+  id-token: write      # OIDC token for npm Trusted Publishing
+
+jobs:
+  publish:
+    name: npm publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: 'https://registry.npmjs.org'
+
+      # Trusted Publishing requires npm >= 11.5.1; Node 22 ships older npm.
+      - name: Ensure npm >= 11.5.1
+        run: npm install -g npm@latest
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Resolve package from tag
+        id: pkg
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          case "$TAG" in
+            sdk-nextjs-v*)
+              echo "name=sdk-nextjs"   >> "$GITHUB_OUTPUT"
+              echo "npm_name=@archastro/sdk-nextjs" >> "$GITHUB_OUTPUT"
+              echo "version=${TAG#sdk-nextjs-v}" >> "$GITHUB_OUTPUT"
+              ;;
+            sdk-v*)
+              echo "name=sdk"          >> "$GITHUB_OUTPUT"
+              echo "npm_name=@archastro/sdk" >> "$GITHUB_OUTPUT"
+              echo "version=${TAG#sdk-v}" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Unrecognized tag: $TAG" >&2
+              exit 1
+              ;;
+          esac
+
+      - name: Verify package.json version matches tag
+        env:
+          DIR: packages/${{ steps.pkg.outputs.name }}
+          EXPECTED: ${{ steps.pkg.outputs.version }}
+        run: |
+          set -euo pipefail
+          actual=$(node -p "require('./$DIR/package.json').version")
+          if [ "$actual" != "$EXPECTED" ]; then
+            echo "Version mismatch: tag says $EXPECTED, package.json says $actual" >&2
+            exit 1
+          fi
+
+      - name: npm publish (OIDC)
+        working-directory: packages/${{ steps.pkg.outputs.name }}
+        run: npm publish --access public --provenance
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+          NPM_NAME: ${{ steps.pkg.outputs.npm_name }}
+          VERSION: ${{ steps.pkg.outputs.version }}
+        run: |
+          set -euo pipefail
+          gh release create "$TAG" \
+            --title "$NPM_NAME v$VERSION" \
+            --notes "Published to npm: https://www.npmjs.com/package/$NPM_NAME/v/$VERSION" \
+            --generate-notes
