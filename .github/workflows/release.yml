@@ -161,5 +161,7 @@ jobs:
             --head "$BRANCH" \
             --title "$TITLE" \
             --body "$body")
-          gh pr merge "$pr_url" --squash --auto --delete-branch
-          echo "Opened $pr_url"
+          # No branch protection on main → --auto fails. Merge immediately.
+          # Tests already ran above; the bump is the only change in this PR.
+          gh pr merge "$pr_url" --squash --delete-branch
+          echo "Merged $pr_url"
