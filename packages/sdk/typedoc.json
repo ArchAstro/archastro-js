@@ -1,0 +1,17 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "@archastro/sdk",
+  "entryPointStrategy": "expand",
+  "entryPoints": ["src"],
+  "tsconfig": "tsconfig.json",
+  "exclude": ["src/phx_channel/tests/**"],
+  "out": "site",
+  "readme": "README.md",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeInternal": true,
+  "validation": {
+    "notExported": false
+  },
+  "githubPages": true
+}

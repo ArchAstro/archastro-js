@@ -6,6 +6,11 @@
 
 JS/TypeScript SDK for the [ArchAstro Developer Platform](https://developers.archastro.ai). Provides typed access to all platform resources, authentication helpers, and real-time Phoenix Channel support. You must register first on the developer site before using this SDK.
 
+## Documentation
+
+API reference documentation is published at
+[archastro.github.io/archastro-js](https://archastro.github.io/archastro-js/).
+
 ## Installation
 
 ```bash
@@ -99,7 +104,9 @@ The SDK includes Phoenix Channel wrappers for real-time features:
 - **`ApiActivityFeedChannel`** - Live activity feeds for agents and organizations
 - **`ApiObjectChannel`** - Collaborative real-time object editing
 
-These are built on a bundled Phoenix Channel client that implements the [Phoenix v2.0.0 wire protocol](./src/phx_channel/README.md) over WebSocket with auto-reconnect, heartbeat, and push buffering.
+These are built on a bundled Phoenix Channel client that implements the
+[Phoenix v2.0.0 wire protocol](./packages/sdk/src/phx_channel/README.md) over
+WebSocket with auto-reconnect, heartbeat, and push buffering.
 
 ## Error handling
 
@@ -136,7 +143,15 @@ npm run test:contract
 
 # Build
 npm run build
+
+# Build API docs
+npm run docs
 ```
+
+The TypeDoc site is written to `packages/sdk/site/`. The docs workflow builds
+the same site for pull requests and deploys
+[the hosted API reference](https://archastro.github.io/archastro-js/) to GitHub
+Pages from `main`.
 
 ### Project structure
 
