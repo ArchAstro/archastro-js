@@ -5,6 +5,7 @@
   "scripts": {
     "build": "npm run build -w packages/sdk && npm run build -w packages/sdk-nextjs",
     "build:examples": "npm run build -w examples/nextjs-auth && npm run build -w examples/nextjs-agent-threads",
+    "docs": "npm run docs -w packages/sdk",
     "dev:auth": "npm run dev -w examples/nextjs-auth",
     "dev:threads": "npm run dev -w examples/nextjs-agent-threads",
     "lint": "npm run lint --workspaces --if-present",
