@@ -3,6 +3,8 @@
   "name": "@archastro/sdk",
   "entryPointStrategy": "expand",
   "entryPoints": ["src"],
+  "projectDocuments": ["docs/*.md"],
+  "sortEntryPoints": false,
   "tsconfig": "tsconfig.json",
   "exclude": ["src/phx_channel/tests/**"],
   "out": "site",

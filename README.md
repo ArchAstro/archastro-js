@@ -10,6 +10,8 @@ JS/TypeScript SDK for the [ArchAstro Developer Platform](https://developers.arch
 
 API reference documentation is published at
 [archastro.github.io/archastro-js](https://archastro.github.io/archastro-js/).
+Start with the guide pages for authentication and integration scenarios, then
+use the generated API reference for exact resources, methods, and types.
 
 ## Installation
 
