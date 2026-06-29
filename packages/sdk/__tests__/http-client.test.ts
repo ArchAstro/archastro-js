@@ -287,3 +287,138 @@ describe("HttpClient 401 auto-refresh", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });
+
+function sseResponse(text: string, status = 200): Response {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    json: async () => ({}),
+    headers: new Headers({ "content-type": "text/event-stream" }),
+    body: new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode(text));
+        controller.close();
+      },
+    }),
+  } as unknown as Response;
+}
+
+describe("HttpClient.streamSSE", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("yields parsed SSE events in order and sends the JSON request body", async () => {
+    const sse =
+      'event: chunk\ndata: {"text":"He"}\n\n' +
+      'event: chunk\ndata: {"text":"llo"}\n\n' +
+      'event: done\ndata: {"ok":true}\n\n';
+    const fetchMock = vi.fn(async () => sseResponse(sse));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const client = new HttpClient({ baseUrl: "https://api.test" });
+    const events: Array<{ event: string; data: unknown }> = [];
+    for await (const ev of client.streamSSE("/api/v1/echo/stream", {
+      method: "POST",
+      body: { prompt: "hi" },
+    })) {
+      events.push(ev);
+    }
+
+    expect(events).toEqual([
+      { event: "chunk", data: { text: "He" } },
+      { event: "chunk", data: { text: "llo" } },
+      { event: "done", data: { ok: true } },
+    ]);
+
+    const init = fetchMock.mock.calls[0]![1] as RequestInit;
+    expect(init.method).toBe("POST");
+    expect(init.body).toBe(JSON.stringify({ prompt: "hi" }));
+    expect((init.headers as Record<string, string>).Accept).toBe("text/event-stream");
+  });
+
+  it("handles multi-line and split-chunk data and a missing trailing blank line", async () => {
+    // Two enqueues that split an event mid-frame; last frame has no trailing \n\n.
+    const fetchMock = vi.fn(
+      async () =>
+        ({
+          ok: true,
+          status: 200,
+          json: async () => ({}),
+          headers: new Headers(),
+          body: new ReadableStream<Uint8Array>({
+            start(controller) {
+              const enc = new TextEncoder();
+              controller.enqueue(enc.encode('event: chunk\ndata: {"text":'));
+              controller.enqueue(enc.encode('"split"}\n\nevent: done\ndata: {"ok":true}'));
+              controller.close();
+            },
+          }),
+        }) as unknown as Response
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const client = new HttpClient({ baseUrl: "https://api.test" });
+    const events: Array<{ event: string; data: unknown }> = [];
+    for await (const ev of client.streamSSE("/api/v1/echo/stream", { method: "POST", body: {} })) {
+      events.push(ev);
+    }
+    expect(events).toEqual([
+      { event: "chunk", data: { text: "split" } },
+      { event: "done", data: { ok: true } },
+    ]);
+  });
+
+  it("throws ApiError on a non-2xx status before the stream opens", async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        ({
+          ok: false,
+          status: 402,
+          json: async () => ({ error: { code: "plan_not_entitled", message: "no plan" } }),
+          headers: new Headers(),
+          body: null,
+        }) as unknown as Response
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const client = new HttpClient({ baseUrl: "https://api.test" });
+    const drain = async (): Promise<void> => {
+      for await (const _ of client.streamSSE("/api/v1/x/stream", { method: "POST", body: {} })) {
+        // drain
+      }
+    };
+    await expect(drain()).rejects.toBeInstanceOf(ApiError);
+  });
+
+  it("retries once on 401 then streams", async () => {
+    const sse = 'event: done\ndata: {"ok":true}\n\n';
+    let call = 0;
+    const fetchMock = vi.fn(async () => {
+      call++;
+      if (call === 1) {
+        return {
+          ok: false,
+          status: 401,
+          json: async () => ({ error: "unauthenticated" }),
+          headers: new Headers(),
+          body: null,
+        } as unknown as Response;
+      }
+      return sseResponse(sse);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const client = new HttpClient({
+      baseUrl: "https://api.test",
+      accessToken: "expired",
+      onRefreshToken: async () => "fresh",
+    });
+    const events: Array<{ event: string; data: unknown }> = [];
+    for await (const ev of client.streamSSE("/api/v1/x/stream", { method: "POST", body: {} })) {
+      events.push(ev);
+    }
+    expect(events).toEqual([{ event: "done", data: { ok: true } }]);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});
