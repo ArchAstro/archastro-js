@@ -6,6 +6,11 @@
  */
 
 import { Channel } from "./channel.js";
+import { appendQueryParams } from "../runtime/url.js";
+import {
+  createWebSocket,
+  type WebSocketLike,
+} from "./websocket.js";
 
 /** Default reconnect backoff schedule (ms), matching the Phoenix JS client. */
 const DEFAULT_BACKOFF_MS = [10, 50, 100, 150, 200, 250, 500, 1000, 2000];
@@ -29,14 +34,6 @@ export type SocketEvent =
   | { type: "open" }
   | { type: "close"; code: number; reason: string }
   | { type: "error"; error: unknown };
-
-type WebSocketLike = {
-  send(data: string): void;
-  close(code?: number, reason?: string): void;
-  addEventListener(type: string, listener: (event: unknown) => void): void;
-  removeEventListener(type: string, listener: (event: unknown) => void): void;
-  readyState: number;
-};
 
 export class Socket {
   private baseUrl: string;
@@ -76,12 +73,11 @@ export class Socket {
   }
 
   private buildUrl(): string {
-    const url = new URL(this.baseUrl);
-    url.searchParams.set("vsn", "2.0.0");
-    for (const [key, value] of Object.entries(this.params)) {
-      url.searchParams.set(key, value);
-    }
-    return url.toString();
+    // String-based query append — safe for ws:// on Hermes / React Native.
+    return appendQueryParams(this.baseUrl, {
+      vsn: "2.0.0",
+      ...this.params,
+    });
   }
 
   // ─── Connection lifecycle ─────────────────────────────────
@@ -94,16 +90,11 @@ export class Socket {
 
   private async doConnect(): Promise<void> {
     const url = this.buildUrl();
-    // Pre-resolve the `ws` constructor in Node before entering the Promise
-    // executor. Socket instantiation must be synchronous inside the executor
-    // so open/error/close handlers are attached before any events can fire.
-    const useGlobal = typeof globalThis.WebSocket !== "undefined";
-    const WSCtor = useGlobal ? null : await loadWsCtor();
+    // Resolve transport before the Promise executor so open/error handlers
+    // attach synchronously after construction (required for Node `ws`).
+    const ws = await createWebSocket(url);
 
     return new Promise<void>((resolve, reject) => {
-      const ws: WebSocketLike = useGlobal
-        ? (new globalThis.WebSocket(url) as unknown as WebSocketLike)
-        : new WSCtor!(url);
 
       // These handlers manage only the initial connection attempt.
       // Once the connection opens, setupReceive() takes over for
@@ -338,18 +329,6 @@ export class Socket {
       listener(event);
     }
   }
-}
-
-let wsCtorPromise: Promise<new (url: string) => WebSocketLike> | null = null;
-
-function loadWsCtor(): Promise<new (url: string) => WebSocketLike> {
-  if (!wsCtorPromise) {
-    const dynamicImport = new Function("s", "return import(s)") as (
-      s: string,
-    ) => Promise<{ default: new (url: string) => WebSocketLike }>;
-    wsCtorPromise = dynamicImport("ws").then((m) => m.default);
-  }
-  return wsCtorPromise;
 }
 
 export { Channel, ChannelError } from "./channel.js";

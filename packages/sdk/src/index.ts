@@ -7,6 +7,30 @@ export { V1 } from "./v1.js";
 export * from "./v1/resources/index.js";
 export { PlatformClient, type PlatformClientConfig } from "./client.js";
 export { AuthClient, type AuthTokens } from "./auth.js";
+export { ApiError, HttpClient, type HttpClientConfig } from "./runtime/http-client.js";
 export { ApiActivityFeedChannel } from "./channels/api_activity_feed_channel.js";
 export { ApiChatChannel } from "./channels/api_chat_channel.js";
 export { ApiObjectChannel } from "./channels/api_object_channel.js";
+// Hand-maintained (re-add after OpenAPI regen if this block is wiped):
+export {
+  PasswordlessAuth,
+  type PasswordlessRegisterInput,
+  type PasswordlessLoginCodeInput,
+  type PasswordlessVerifyCodeInput,
+} from "./passwordless.js";
+export {
+  createSessionClient,
+  platformSocketUrl,
+  type SessionClient,
+  type SessionClientOptions,
+  type SessionStorage,
+  type StoredSession,
+} from "./session.js";
+export { platformSocketUrl as buildPlatformSocketUrl, appendQueryParams } from "./runtime/url.js";
+export {
+  createPlatformSocket,
+  type PlatformSocketOptions,
+} from "./platform-socket.js";
+export { Socket, type SocketConfig, type SocketEvent } from "./phx_channel/socket.js";
+export { Channel, ChannelError } from "./phx_channel/channel.js";
+

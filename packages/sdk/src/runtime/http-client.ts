@@ -39,10 +39,13 @@ export class HttpClient {
   }
 
   private getToken(): string | undefined {
-    if (this.config.getAccessToken) {
-      return this.config.getAccessToken();
-    }
-    return this.config.accessToken;
+    // Prefer the live provider (session storage) when it has a value, but fall
+    // back to the last setAccessToken / post-refresh value. createSessionClient
+    // wires getAccessToken → current.accessToken; if a rotation updates
+    // config.accessToken before the in-memory session is rewritten, the
+    // fallback keeps the 401-retry Authorization header correct.
+    const fromProvider = this.config.getAccessToken?.();
+    return fromProvider || this.config.accessToken;
   }
 
   private transformPath(path: string): string {

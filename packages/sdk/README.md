@@ -61,10 +61,29 @@ const teams = await client.teams.list();
 console.log(me.id, me.email, teams);
 ```
 
+## React Native / Expo
+
+Native mobile works out of the box — no Node `ws` / `events` polyfills:
+
+```ts
+import {
+  createSessionClient,
+  createPlatformSocket,
+  ApiChatChannel,
+} from "@archastro/sdk";
+```
+
+Use `createSessionClient` with SecureStore/AsyncStorage, passwordless OTP via
+`sessionClient.passwordless`, REST via `sessionClient.client`, and realtime via
+`createPlatformSocket` + `ApiChatChannel`. See
+[React Native guide](./docs/react-native.md).
+
 ## Integration Guides
 
 - [Authentication](./docs/authentication.md): choose the right token strategy for
   browser sessions, server-side app integrations, and org workers.
+- [React Native / Expo](./docs/react-native.md): session storage, passwordless
+  auth, and chat channels without Node polyfills.
 - [Integration scenarios](./docs/scenarios.md): read the current user, list
   teams, and create an agent with snippets that were smoke-tested against the
   local platform dev harness.
