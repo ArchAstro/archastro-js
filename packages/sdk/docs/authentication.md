@@ -8,7 +8,7 @@ group: Guides
 `@archastro/sdk` supports four auth shapes. Pick the one that matches who the
 process is acting as.
 
-## Mobile / SPA durable user session
+## Mobile / SPA durable app session
 
 Use this for React Native or browser apps that sign users in (passwordless OTP
 or other flows) and need access tokens to auto-refresh across restarts.

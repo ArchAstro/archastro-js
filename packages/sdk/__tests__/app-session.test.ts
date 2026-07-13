@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { PlatformClient } from "../src/index.js";
-import type { SessionStorage, StoredSession } from "../src/user-session.js";
+import type { SessionStorage, AppSession } from "../src/app-session.js";
 import { platformSocketUrl } from "../src/runtime/url.js";
 
-function memoryStorage(seed?: StoredSession | null): SessionStorage {
-  let value: StoredSession | null = seed ?? null;
+function memoryStorage(seed?: AppSession | null): SessionStorage {
+  let value: AppSession | null = seed ?? null;
   return {
     load: async () => value,
     save: async (s) => {
@@ -169,7 +169,7 @@ describe("PlatformClient.forApp", () => {
   });
 
   it("rotation still succeeds when storage.save throws", async () => {
-    let value: StoredSession | null = {
+    let value: AppSession | null = {
       accessToken: "at_expired",
       refreshToken: "rt_old",
       user: { id: "usr_1" },

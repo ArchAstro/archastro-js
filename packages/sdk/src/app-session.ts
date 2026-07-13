@@ -1,9 +1,9 @@
 /**
- * Durable user-session mode for PlatformClient (hand-maintained).
+ * Durable app-session mode for PlatformClient (hand-maintained).
  *
  * **Not a public package export.** The generator wires
  * `PlatformClient.forApp` → `forApp()` from this module. Apps only see:
- *   PlatformClient.forApp / AppPlatformClient / SessionStorage / StoredSession
+ *   PlatformClient.forApp / AppPlatformClient / SessionStorage / AppSession
  * PasswordlessAuth, free forApp, and createPlatformSocket stay internal.
  */
 import { AuthClient, type AuthTokens } from "./auth.js";
@@ -16,7 +16,7 @@ import {
 } from "./platform-socket.js";
 import type { Socket, SocketConfig } from "./phx_channel/socket.js";
 
-export interface StoredSession {
+export interface AppSession {
   accessToken: string;
   refreshToken?: string;
   accessTokenExpiresAt?: number | null;
@@ -32,8 +32,8 @@ export interface StoredSession {
 }
 
 export interface SessionStorage {
-  load(): Promise<StoredSession | null>;
-  save(session: StoredSession): Promise<void>;
+  load(): Promise<AppSession | null>;
+  save(session: AppSession): Promise<void>;
   clear(): Promise<void>;
 }
 
@@ -53,15 +53,15 @@ export interface ForAppOptions {
 export type AppPlatformClient = PlatformClient & {
   readonly passwordless: PasswordlessAuth;
   /** Hydrate from storage and wire auto-refresh. Returns session if any. */
-  restore(): Promise<StoredSession | null>;
+  restore(): Promise<AppSession | null>;
   /** Apply tokens from a login/verify response and persist. */
   signIn(
     tokens: AuthTokens,
-    user?: StoredSession["user"],
-  ): Promise<StoredSession>;
+    user?: AppSession["user"],
+  ): Promise<AppSession>;
   /** Clear memory + storage + client tokens. */
   signOut(): Promise<void>;
-  getSession(): StoredSession | null;
+  getSession(): AppSession | null;
   /**
    * Phoenix ApiSocket using the current access token + publishable key.
    * Throws if not signed in.
@@ -125,7 +125,7 @@ export function forApp(options: ForAppOptions): AppPlatformClient {
     "",
   );
 
-  let current: StoredSession | null = null;
+  let current: AppSession | null = null;
 
   const client = new PlatformClient({
     baseUrl,
@@ -206,7 +206,7 @@ export function forApp(options: ForAppOptions): AppPlatformClient {
         "Missing refresh token — session cannot auto-renew without one",
       );
     }
-    const session: StoredSession = {
+    const session: AppSession = {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       accessTokenExpiresAt:

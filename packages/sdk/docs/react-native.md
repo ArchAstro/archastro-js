@@ -30,7 +30,7 @@ import {
   PlatformClient,
   ApiChatChannel,
   type SessionStorage,
-  type StoredSession,
+  type AppSession,
 } from "@archastro/sdk";
 import * as SecureStore from "expo-secure-store";
 
@@ -39,7 +39,7 @@ import * as SecureStore from "expo-secure-store";
 const storage: SessionStorage = {
   async load() {
     const raw = await SecureStore.getItemAsync("archastro_session");
-    return raw ? (JSON.parse(raw) as StoredSession) : null;
+    return raw ? (JSON.parse(raw) as AppSession) : null;
   },
   async save(session) {
     await SecureStore.setItemAsync("archastro_session", JSON.stringify(session));
@@ -69,7 +69,7 @@ const { tokens, user } = await client.passwordless.verifyCode({
   email: "you@company.com",
   code: "123456",
 });
-await client.signIn(tokens, user as StoredSession["user"]);
+await client.signIn(tokens, user as AppSession["user"]);
 
 // Typed REST — 401 auto-refreshes using the stored refresh token
 const me = await client.users.me();
