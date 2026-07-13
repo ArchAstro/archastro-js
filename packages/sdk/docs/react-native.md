@@ -19,15 +19,15 @@ npm install @archastro/sdk
 optional `ws` package is **Node-only** and is not required in RN (Metro loads
 `phx_channel/websocket.native.js` instead).
 
-## Session + passwordless auth
+## One client: `PlatformClient.forApp`
 
-Provide your own storage (Expo SecureStore or AsyncStorage) and a publishable
-key:
+Provide durable storage (Expo SecureStore or AsyncStorage) and a publishable
+key. Session lifecycle, passwordless OTP, auto-refresh, and REST all live on
+the same `PlatformClient` instance:
 
 ```ts
 import {
-  createSessionClient,
-  createPlatformSocket,
+  PlatformClient,
   ApiChatChannel,
   type SessionStorage,
   type StoredSession,
@@ -47,42 +47,37 @@ const storage: SessionStorage = {
   },
 };
 
-const sessionClient = createSessionClient({
+const client = PlatformClient.forApp({
   baseUrl: process.env.EXPO_PUBLIC_API_BASE_URL!,
   publishableKey: process.env.EXPO_PUBLIC_PUBLISHABLE_KEY!,
   storage,
 });
 
-await sessionClient.restore();
+await client.restore();
 
 // Passwordless OTP
-await sessionClient.passwordless.register({
+await client.passwordless.register({
   email: "you@company.com",
   full_name: "You",
   alias: "you",
 });
 // or requestLoginCode on existing accounts
 
-const { tokens, user } = await sessionClient.passwordless.verifyCode({
+const { tokens, user } = await client.passwordless.verifyCode({
   email: "you@company.com",
   code: "123456",
 });
-await sessionClient.establish(tokens, user as StoredSession["user"]);
+await client.signIn(tokens, user as StoredSession["user"]);
 
-// Typed REST
-const me = await sessionClient.client.users.me();
-const agents = await sessionClient.client.agents.list();
+// Typed REST — 401 auto-refreshes using the stored refresh token
+const me = await client.users.me();
+const agents = await client.agents.list();
 ```
 
 ## Realtime chat
 
 ```ts
-const session = sessionClient.getSession();
-const socket = createPlatformSocket({
-  apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL!,
-  accessToken: session!.accessToken,
-  publishableKey: process.env.EXPO_PUBLIC_PUBLISHABLE_KEY,
-});
+const socket = client.createSocket(); // uses current access token + publishable key
 await socket.connect();
 
 const channel = await ApiChatChannel.joinUserThread(socket, threadId, {
