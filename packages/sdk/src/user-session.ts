@@ -1,9 +1,10 @@
 /**
  * Durable user-session mode for PlatformClient (hand-maintained).
  *
- * Use `PlatformClient.forApp({ publishableKey, storage, baseUrl })` for native
- * / SPA clients. Session state, passwordless OTP, auto-refresh, and optional
- * socket helpers live on the returned client — not a parallel SessionClient.
+ * **Not a public package export.** The generator wires
+ * `PlatformClient.forApp` → `forApp()` from this module. Apps only see:
+ *   PlatformClient.forApp / AppPlatformClient / SessionStorage / StoredSession
+ * PasswordlessAuth, free forApp, and createPlatformSocket stay internal.
  */
 import { AuthClient, type AuthTokens } from "./auth.js";
 import { PlatformClient } from "./client.js";

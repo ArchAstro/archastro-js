@@ -63,15 +63,17 @@ console.log(me.id, me.email, teams);
 
 ## React Native / Expo
 
-Native mobile works out of the box — no Node `ws` / `events` polyfills:
+Native mobile works out of the box — no Node `ws` / `events` polyfills.
+Use **`PlatformClient.forApp`** so session storage, passwordless OTP, and
+auto-refresh stay behind one client (not a parallel session helper):
 
 ```ts
-import { PlatformClient, ApiChatChannel } from "@archastro/sdk";
+import { PlatformClient, ApiChatChannel, type SessionStorage } from "@archastro/sdk";
 
 const client = PlatformClient.forApp({
   publishableKey: process.env.EXPO_PUBLIC_PUBLISHABLE_KEY!,
   baseUrl: process.env.EXPO_PUBLIC_API_BASE_URL!,
-  storage, // SecureStore / AsyncStorage adapter
+  storage, // your SessionStorage (SecureStore / AsyncStorage)
 });
 
 await client.restore();
@@ -80,8 +82,7 @@ await client.agents.list();
 const socket = client.createSocket();
 ```
 
-One `PlatformClient` owns session storage, passwordless OTP, 401 auto-refresh,
-REST resources, and socket helpers. See [React Native guide](./docs/react-native.md).
+See [React Native guide](./docs/react-native.md).
 
 ## Integration Guides
 
