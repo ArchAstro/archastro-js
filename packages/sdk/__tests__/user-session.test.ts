@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { PlatformClient } from "../src/platform-client.js";
+import { PlatformClient } from "../src/index.js";
 import type { SessionStorage, StoredSession } from "../src/user-session.js";
 import { platformSocketUrl } from "../src/runtime/url.js";
 

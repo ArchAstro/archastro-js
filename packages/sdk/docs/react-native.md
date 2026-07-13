@@ -34,6 +34,8 @@ import {
 } from "@archastro/sdk";
 import * as SecureStore from "expo-secure-store";
 
+// Only SessionStorage is a public type you implement — OTP, refresh, and
+// sockets are methods on the client returned by forApp.
 const storage: SessionStorage = {
   async load() {
     const raw = await SecureStore.getItemAsync("archastro_session");
@@ -55,7 +57,7 @@ const client = PlatformClient.forApp({
 
 await client.restore();
 
-// Passwordless OTP
+// Passwordless OTP (behind the client — not a free-standing auth class)
 await client.passwordless.register({
   email: "you@company.com",
   full_name: "You",

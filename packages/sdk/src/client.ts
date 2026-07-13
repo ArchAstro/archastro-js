@@ -4,8 +4,10 @@
 
 import { AuthClient } from "./auth.js";
 import { HttpClient } from "./runtime/http-client.js";
+import { forApp } from "./user-session.js";
 import { V1 } from "./v1.js";
 import type { HttpClientConfig } from "./runtime/http-client.js";
+import type { AppPlatformClient, ForAppOptions } from "./user-session.js";
 import type { ActivityFeedResource } from "./v1/resources/activity_feed.js";
 import type { AgentComputerResource } from "./v1/resources/agent_computers.js";
 import type { AgentEnvVarResource } from "./v1/resources/agent_env_vars.js";
@@ -205,4 +207,20 @@ export class PlatformClient {
     });
     return client;
   }
+
+  /**
+   * Client-side app: publishable key + durable session storage.
+   * Wires passwordless OTP, restore/signIn/signOut, 401 auto-refresh, and createSocket().
+   */
+  static forApp(options: ForAppOptions): AppPlatformClient {
+    return forApp(options);
+  }
 }
+
+export type {
+  AppPlatformClient,
+  ForAppOptions,
+  SessionStorage,
+  StoredSession,
+} from "./user-session.js";
+
