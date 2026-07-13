@@ -66,17 +66,22 @@ console.log(me.id, me.email, teams);
 Native mobile works out of the box — no Node `ws` / `events` polyfills:
 
 ```ts
-import {
-  createSessionClient,
-  createPlatformSocket,
-  ApiChatChannel,
-} from "@archastro/sdk";
+import { PlatformClient, ApiChatChannel } from "@archastro/sdk";
+
+const client = PlatformClient.forApp({
+  publishableKey: process.env.EXPO_PUBLIC_PUBLISHABLE_KEY!,
+  baseUrl: process.env.EXPO_PUBLIC_API_BASE_URL!,
+  storage, // SecureStore / AsyncStorage adapter
+});
+
+await client.restore();
+// client.passwordless… → client.signIn(tokens, user)
+await client.agents.list();
+const socket = client.createSocket();
 ```
 
-Use `createSessionClient` with SecureStore/AsyncStorage, passwordless OTP via
-`sessionClient.passwordless`, REST via `sessionClient.client`, and realtime via
-`createPlatformSocket` + `ApiChatChannel`. See
-[React Native guide](./docs/react-native.md).
+One `PlatformClient` owns session storage, passwordless OTP, 401 auto-refresh,
+REST resources, and socket helpers. See [React Native guide](./docs/react-native.md).
 
 ## Integration Guides
 

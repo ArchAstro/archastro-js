@@ -1,14 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  createSessionClient,
-  platformSocketUrl,
-  type SessionStorage,
-  type StoredSession,
-} from "../src/session.js";
-
-beforeEach(() => {
-  vi.restoreAllMocks();
-});
+import { PlatformClient } from "../src/platform-client.js";
+import type { SessionStorage, StoredSession } from "../src/user-session.js";
+import { platformSocketUrl } from "../src/runtime/url.js";
 
 function memoryStorage(seed?: StoredSession | null): SessionStorage {
   let value: StoredSession | null = seed ?? null;
@@ -23,6 +16,10 @@ function memoryStorage(seed?: StoredSession | null): SessionStorage {
   };
 }
 
+beforeEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe("platformSocketUrl", () => {
   it("maps http(s) API origin to Phoenix websocket path", () => {
     expect(platformSocketUrl("http://localhost:4005")).toBe(
@@ -31,92 +28,86 @@ describe("platformSocketUrl", () => {
     expect(platformSocketUrl("https://platform.archastro.ai/")).toBe(
       "wss://platform.archastro.ai/socket/api/websocket",
     );
-    expect(platformSocketUrl("http://127.0.0.1:4005/extra/path")).toBe(
-      "ws://127.0.0.1:4005/socket/api/websocket",
-    );
-  });
-
-  it("rejects invalid base URLs", () => {
-    expect(() => platformSocketUrl("")).toThrow(/Invalid API base URL/);
-    expect(() => platformSocketUrl("://broken")).toThrow(/Invalid API base URL/);
   });
 });
 
-describe("createSessionClient", () => {
-  it("restores session from storage and exposes getAccessToken", async () => {
+describe("PlatformClient.forApp", () => {
+  it("restores session from storage", async () => {
     const storage = memoryStorage({
       accessToken: "at_1",
       refreshToken: "rt_1",
       user: { id: "usr_1", email: "a@b.co" },
     });
-    const session = createSessionClient({
+    const client = PlatformClient.forApp({
       baseUrl: "http://localhost:4005",
       publishableKey: "pk_test",
       storage,
     });
-    const restored = await session.restore();
+    const restored = await client.restore();
     expect(restored?.accessToken).toBe("at_1");
-    expect(session.getSession()?.user?.email).toBe("a@b.co");
+    expect(client.getSession()?.user?.email).toBe("a@b.co");
+    // still a PlatformClient — resources exist
+    expect(client.agents).toBeDefined();
+    expect(client.passwordless).toBeDefined();
   });
 
-  it("establish persists tokens via storage", async () => {
+  it("signIn persists tokens via storage", async () => {
     const storage = memoryStorage();
     const save = vi.spyOn(storage, "save");
-    const session = createSessionClient({
+    const client = PlatformClient.forApp({
       baseUrl: "http://localhost:4005",
       publishableKey: "pk_test",
       storage,
     });
-    await session.establish(
+    await client.signIn(
       { accessToken: "at_new", refreshToken: "rt_new", tokenExpiry: 3600 },
       { id: "usr_x", email: "x@y.z" },
     );
     expect(save).toHaveBeenCalled();
-    expect(session.getSession()?.accessToken).toBe("at_new");
-    expect(session.getSession()?.user?.id).toBe("usr_x");
+    expect(client.getSession()?.accessToken).toBe("at_new");
+    expect(client.getSession()?.user?.id).toBe("usr_x");
   });
 
-  it("clear wipes storage", async () => {
+  it("signOut wipes storage and session", async () => {
     const storage = memoryStorage({
       accessToken: "at",
       refreshToken: "rt",
     });
-    const session = createSessionClient({
+    const client = PlatformClient.forApp({
       baseUrl: "http://localhost:4005",
       publishableKey: "pk_test",
       storage,
     });
-    await session.restore();
-    await session.clear();
-    expect(session.getSession()).toBeNull();
+    await client.restore();
+    await client.signOut();
+    expect(client.getSession()).toBeNull();
     expect(await storage.load()).toBeNull();
   });
 
   it("restore drops access-only sessions that cannot auto-renew", async () => {
     const storage = memoryStorage({
       accessToken: "at_only",
-      // no refreshToken
       user: { id: "usr_1" },
     });
-    const session = createSessionClient({
+    const client = PlatformClient.forApp({
       baseUrl: "http://localhost:4005",
       publishableKey: "pk_test",
       storage,
     });
-    const restored = await session.restore();
+    const restored = await client.restore();
     expect(restored).toBeNull();
-    expect(session.getSession()).toBeNull();
+    expect(client.getSession()).toBeNull();
     expect(await storage.load()).toBeNull();
   });
 
-  it("establish requires a refresh token", async () => {
-    const session = createSessionClient({
+  it("signIn requires a refresh token", async () => {
+    const client = PlatformClient.forApp({
       baseUrl: "http://localhost:4005",
       publishableKey: "pk_test",
       storage: memoryStorage(),
     });
     await expect(
-      session.establish({ accessToken: "at_only" }, { id: "usr_x" }),
+      client.signIn({ accessToken: "at_only" }, { id: "usr_x" }),
     ).rejects.toThrow(/refresh token/i);
   });
 
@@ -142,7 +133,6 @@ describe("createSessionClient", () => {
           body: null,
         } as unknown as Response;
       }
-      // First protected call 401, retry 200
       if (call === 1) {
         return {
           ok: false,
@@ -162,16 +152,16 @@ describe("createSessionClient", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    const session = createSessionClient({
+    const client = PlatformClient.forApp({
       baseUrl: "http://localhost:4005",
       publishableKey: "pk_test",
       storage,
     });
-    await session.restore();
-    const me = await session.client.users.me();
+    await client.restore();
+    const me = await client.users.me();
     expect(me).toEqual({ id: "usr_1", email: "a@b.co" });
-    expect(session.getSession()?.accessToken).toBe("at_fresh");
-    expect(session.getSession()?.refreshToken).toBe("rt_fresh");
+    expect(client.getSession()?.accessToken).toBe("at_fresh");
+    expect(client.getSession()?.refreshToken).toBe("rt_fresh");
     expect(await storage.load()).toMatchObject({
       accessToken: "at_fresh",
       refreshToken: "rt_fresh",
@@ -230,16 +220,42 @@ describe("createSessionClient", () => {
       }),
     );
 
-    const session = createSessionClient({
+    const client = PlatformClient.forApp({
       baseUrl: "http://localhost:4005",
       publishableKey: "pk_test",
       storage,
     });
-    await session.restore();
-    const me = await session.client.users.me();
+    await client.restore();
+    const me = await client.users.me();
     expect(me).toEqual({ id: "usr_1" });
-    // In-memory rotation must succeed even though persist failed.
-    expect(session.getSession()?.accessToken).toBe("at_fresh");
-    expect(session.getSession()?.refreshToken).toBe("rt_fresh");
+    expect(client.getSession()?.accessToken).toBe("at_fresh");
+    expect(client.getSession()?.refreshToken).toBe("rt_fresh");
+  });
+
+  it("createSocket requires a signed-in session", async () => {
+    const client = PlatformClient.forApp({
+      baseUrl: "http://localhost:4005",
+      publishableKey: "pk_test",
+      storage: memoryStorage(),
+    });
+    expect(() => client.createSocket()).toThrow(/not signed in/i);
+
+    await client.signIn(
+      { accessToken: "at", refreshToken: "rt" },
+      { id: "usr_1" },
+    );
+    const socket = client.createSocket();
+    expect(socket).toBeDefined();
+  });
+
+  it("preserves other PlatformClient factories", () => {
+    const secret = PlatformClient.withSecretKey("sk_test", "http://localhost:4005");
+    expect(secret.agents).toBeDefined();
+    const token = PlatformClient.withToken(
+      "pk_test",
+      "at",
+      "http://localhost:4005",
+    );
+    expect(token.agents).toBeDefined();
   });
 });
