@@ -10,7 +10,7 @@ export type {
   AppPlatformClient,
   ForAppOptions,
   SessionStorage,
-  StoredSession,
+  AppSession,
 } from "./client.js";
 export { AuthClient, type AuthTokens } from "./auth.js";
 export { ApiActivityFeedChannel } from "./channels/api_activity_feed_channel.js";
