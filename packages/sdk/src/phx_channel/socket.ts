@@ -253,6 +253,12 @@ export class Socket {
       const closeEvent = event as { code?: number; reason?: string };
       this.connected = false;
       this.stopHeartbeat();
+      const transportError = new Error(
+        `WebSocket closed: ${closeEvent.code ?? 1006}`,
+      );
+      for (const channel of this.channels.values()) {
+        channel.onSocketClose(transportError);
+      }
       this.emit({
         type: "close",
         code: closeEvent.code ?? 1006,

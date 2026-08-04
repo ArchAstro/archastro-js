@@ -4,7 +4,9 @@
 
 import { forApp } from "./app-session.js";
 import { AuthClient } from "./auth.js";
+import { CustomObjectSubscriptions } from "./custom-object-subscriptions.js";
 import { HttpClient } from "./runtime/http-client.js";
+import { createPlatformSocket } from "./platform-socket.js";
 import { V1 } from "./v1.js";
 import type { AppPlatformClient, ForAppOptions } from "./app-session.js";
 import type { HttpClientConfig } from "./runtime/http-client.js";
@@ -57,6 +59,10 @@ export interface PlatformClientConfig {
   onRefreshToken?: () => Promise<string>;
   pathPrefix?: string;
   defaultHeaders?: Record<string, string>;
+  /** Fetch credential policy. Use `include` for a same-origin session gateway. */
+  credentials?: RequestCredentials;
+  /** WebSocket path for realtime subscriptions, including any gateway prefix. */
+  socketPath?: string;
 }
 
 export class PlatformClient {
@@ -104,6 +110,7 @@ export class PlatformClient {
   readonly work_items: WorkItemResource;
   readonly ai: AiResource;
   readonly oauth: OauthResource;
+  readonly customObjectSubscriptions: CustomObjectSubscriptions;
 
   constructor(config: PlatformClientConfig = {}) {
     const httpConfig: HttpClientConfig = {
@@ -113,6 +120,7 @@ export class PlatformClient {
       onRefreshToken: config.onRefreshToken,
       pathPrefix: config.pathPrefix,
       defaultHeaders: config.defaultHeaders,
+      credentials: config.credentials,
     };
 
     this.http = new HttpClient(httpConfig);
@@ -159,6 +167,19 @@ export class PlatformClient {
     this.work_items = this.v1.work_items;
     this.ai = this.v1.ai;
     this.oauth = this.v1.oauth;
+    this.customObjectSubscriptions = new CustomObjectSubscriptions(() =>
+      createPlatformSocket({
+        apiBaseUrl: config.baseUrl ?? "https://platform.archastro.ai",
+        accessToken: this.http.getAccessToken(),
+        publishableKey: config.defaultHeaders?.["x-archastro-api-key"],
+        socketPath:
+          config.socketPath ??
+          (config.pathPrefix
+            ? `${config.pathPrefix.replace(/\/+$/, "")}/socket`
+            : undefined),
+        socketConfig: { autoReconnect: false },
+      }),
+    );
   }
 
 

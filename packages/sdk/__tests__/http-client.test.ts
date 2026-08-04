@@ -288,6 +288,23 @@ describe("HttpClient 401 auto-refresh", () => {
   });
 });
 
+describe("HttpClient same-origin authentication", () => {
+  it("passes configured cookie credentials to fetch", async () => {
+    const fetchMock = mockFetch([{ status: 200, body: { id: "cobj_1" } }]);
+    vi.stubGlobal("fetch", fetchMock);
+    const client = new HttpClient({
+      baseUrl: "https://archcode.test",
+      credentials: "include",
+    });
+
+    await client.request("/api/v1/custom_objects/cobj_1");
+
+    expect(fetchMock.mock.calls[0]?.[1]).toEqual(expect.objectContaining({
+      credentials: "include",
+    }));
+  });
+});
+
 function sseResponse(text: string, status = 200): Response {
   return {
     ok: status >= 200 && status < 300,
