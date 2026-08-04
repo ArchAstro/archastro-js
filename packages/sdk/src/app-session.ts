@@ -7,7 +7,10 @@
  * PasswordlessAuth, free forApp, and createPlatformSocket stay internal.
  */
 import { AuthClient, type AuthTokens } from "./auth.js";
-import { PlatformClient } from "./client.js";
+import type {
+  PlatformClient,
+  PlatformClientConstructor,
+} from "./client.js";
 import { HttpClient } from "./runtime/http-client.js";
 import { PasswordlessAuth } from "./passwordless.js";
 import {
@@ -50,7 +53,9 @@ export interface ForAppOptions {
  * PlatformClient with app-session capabilities.
  * Still a real PlatformClient — all generated resources work.
  */
-export type AppPlatformClient = PlatformClient & {
+export type AppPlatformClient<
+  TClient extends PlatformClient = PlatformClient,
+> = TClient & {
   readonly passwordless: PasswordlessAuth;
   /** Hydrate from storage and wire auto-refresh. Returns session if any. */
   restore(): Promise<AppSession | null>;
@@ -118,7 +123,10 @@ function applyAccessAndRefresh(client: PlatformClient, tokens: AuthTokens): void
  * Wires passwordless OTP, restore/signIn/signOut, 401 auto-refresh with
  * rotated-token persistence, and createSocket().
  */
-export function forApp(options: ForAppOptions): AppPlatformClient {
+export function forApp<TClient extends PlatformClient>(
+  options: ForAppOptions,
+  Client: PlatformClientConstructor<TClient>,
+): AppPlatformClient<TClient> {
   const { publishableKey, storage } = options;
   const baseUrl = (options.baseUrl ?? "https://platform.archastro.ai").replace(
     /\/+$/,
@@ -127,7 +135,7 @@ export function forApp(options: ForAppOptions): AppPlatformClient {
 
   let current: AppSession | null = null;
 
-  const client = new PlatformClient({
+  const client = new Client({
     baseUrl,
     defaultHeaders: { "x-archastro-api-key": publishableKey },
     getAccessToken: () => current?.accessToken,
@@ -167,7 +175,7 @@ export function forApp(options: ForAppOptions): AppPlatformClient {
     wireRefresh(client, publishableKey, baseUrl, persistRotation);
   };
 
-  const app = client as AppPlatformClient;
+  const app = client as AppPlatformClient<TClient>;
 
   Object.defineProperty(app, "passwordless", {
     value: passwordless,

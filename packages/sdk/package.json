@@ -15,9 +15,10 @@
     "build": "tsc",
     "clean": "rm -rf dist",
     "docs": "typedoc --options typedoc.json",
-    "lint": "tsc --noEmit",
+    "lint": "tsc --noEmit && npm run test:types",
     "prepublishOnly": "npm run build",
     "test": "vitest run",
+    "test:types": "npm run build && tsc -p tsconfig.type-tests.json",
     "test:contract": "vitest run --config __tests__/contract/vitest.contract.config.ts"
   },
   "license": "MIT",

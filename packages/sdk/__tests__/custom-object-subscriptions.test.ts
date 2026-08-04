@@ -3,12 +3,15 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   AuthenticationError,
   AuthorizationError,
+  customObjectSubscriptionsExtension,
   CustomObjectSubscriptions,
   NotFoundError,
   PlatformClient,
   ValidationError,
+  withCustomObjectSubscriptions,
   type CustomObjectConnectionState,
   type CustomObjectPresence,
+  type PlatformClientConstructor,
 } from "../src/index.js";
 import type { SocketEvent } from "../src/phx_channel/socket.js";
 
@@ -107,14 +110,72 @@ afterEach(() => {
 });
 
 describe("CustomObjectSubscriptions", () => {
-  it("remains available from the generated PlatformClient public surface", () => {
-    const client = new PlatformClient({
+  it("extends PlatformClient without replacing generated behavior", () => {
+    const RealtimePlatformClient = PlatformClient.extend(
+      customObjectSubscriptionsExtension({
+        socketPath: "/api/archastro/platform/socket",
+      }),
+    );
+    const client = new RealtimePlatformClient({
       baseUrl: "https://archcode.test",
       pathPrefix: "/api/archastro/platform",
       credentials: "include",
-      socketPath: "/api/archastro/platform/socket",
     });
 
+    expect(client.customObjectSubscriptions).toBeInstanceOf(
+      CustomObjectSubscriptions,
+    );
+    expect(client.custom_objects).toBeDefined();
+  });
+
+  it("preserves extensions through generated client factories", () => {
+    const RealtimePlatformClient = PlatformClient.extend(
+      withCustomObjectSubscriptions,
+    );
+    const client = RealtimePlatformClient.withToken("pk_test", "at_test");
+
+    expect(client).toBeInstanceOf(RealtimePlatformClient);
+    expect(client.customObjectSubscriptions).toBeInstanceOf(
+      CustomObjectSubscriptions,
+    );
+  });
+
+  it("chains independently-authored extensions with inferred methods", () => {
+    const withDiagnostics = <TBase extends PlatformClientConstructor>(
+      Base: TBase,
+    ) =>
+      class DiagnosticsPlatformClient extends Base {
+        diagnosticLabel(): string {
+          return `resources:${this.custom_objects ? "ready" : "missing"}`;
+        }
+      };
+
+    const ExtendedPlatformClient = PlatformClient.extend(
+      withCustomObjectSubscriptions,
+    ).extend(withDiagnostics);
+    const client = new ExtendedPlatformClient();
+
+    expect(client.diagnosticLabel()).toBe("resources:ready");
+    expect(client.customObjectSubscriptions).toBeInstanceOf(
+      CustomObjectSubscriptions,
+    );
+  });
+
+  it("preserves extensions through the app-session factory", () => {
+    const RealtimePlatformClient = PlatformClient.extend(
+      withCustomObjectSubscriptions,
+    );
+    const client = RealtimePlatformClient.forApp({
+      publishableKey: "pk_test",
+      storage: {
+        load: async () => null,
+        save: async () => {},
+        clear: async () => {},
+      },
+    });
+
+    expect(client).toBeInstanceOf(RealtimePlatformClient);
+    expect(client.restore).toBeTypeOf("function");
     expect(client.customObjectSubscriptions).toBeInstanceOf(
       CustomObjectSubscriptions,
     );
