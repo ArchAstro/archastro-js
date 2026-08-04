@@ -9,6 +9,8 @@ import {
   NotFoundError,
   ValidationError,
 } from "./runtime/http-client.js";
+import type { HttpClient } from "./runtime/http-client.js";
+import { createPlatformSocket } from "./platform-socket.js";
 import type { Socket } from "./phx_channel/socket.js";
 
 export type DeepPartial<T> = T extends readonly unknown[]
@@ -90,6 +92,13 @@ export interface CustomObjectSubscription<
 type SocketFactory = () => Socket;
 type Unsubscribe = () => void;
 
+export interface CustomObjectSubscriptionsClientConfig {
+  baseUrl?: string;
+  pathPrefix?: string;
+  defaultHeaders?: Record<string, string>;
+  socketPath?: string;
+}
+
 interface QueuedPatch<TFields> {
   fields: DeepPartial<TFields>;
   waiters: Array<{ resolve(): void; reject(error: unknown): void }>;
@@ -103,6 +112,33 @@ export class CustomObjectSubscriptions {
   ): CustomObjectSubscription<TFields> {
     return new ManagedCustomObjectSubscription(this.createSocket, options);
   }
+}
+
+/**
+ * Hand-written PlatformClient extension seam. Generated clients delegate here
+ * so socket authentication and routing policy survive SDK regeneration.
+ */
+export function customObjectSubscriptionsForClient(
+  config: CustomObjectSubscriptionsClientConfig,
+  http: HttpClient,
+): CustomObjectSubscriptions {
+  const publishableKey = Object.entries(config.defaultHeaders ?? {}).find(
+    ([name]) => name.toLowerCase() === "x-archastro-api-key",
+  )?.[1];
+
+  return new CustomObjectSubscriptions(() =>
+    createPlatformSocket({
+      apiBaseUrl: config.baseUrl ?? "https://platform.archastro.ai",
+      accessToken: http.getAccessToken(),
+      publishableKey,
+      socketPath:
+        config.socketPath ??
+        (config.pathPrefix
+          ? `${config.pathPrefix.replace(/\/+$/, "")}/socket`
+          : undefined),
+      socketConfig: { autoReconnect: false },
+    }),
+  );
 }
 
 class ManagedCustomObjectSubscription<
