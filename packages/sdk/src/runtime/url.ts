@@ -7,7 +7,10 @@
  * Convert an HTTP(S) platform origin to the Phoenix ApiSocket WebSocket URL.
  * `http(s)://host[:port]/...` → `ws(s)://host[:port]/socket/api/websocket`
  */
-export function platformSocketUrl(apiBaseUrl: string): string {
+export function platformSocketUrl(
+  apiBaseUrl: string,
+  socketPath = "/socket/api/websocket",
+): string {
   const base = apiBaseUrl.replace(/\/+$/, "");
   const withScheme = base.includes("://") ? base : `http://${base}`;
   const match = withScheme.match(/^(https?):\/\/([^/?#]+)(?:[/?#].*)?$/i);
@@ -16,7 +19,8 @@ export function platformSocketUrl(apiBaseUrl: string): string {
   }
   const scheme = match[1].toLowerCase() === "https" ? "wss" : "ws";
   const host = match[2];
-  return `${scheme}://${host}/socket/api/websocket`;
+  const normalizedPath = socketPath.startsWith("/") ? socketPath : `/${socketPath}`;
+  return `${scheme}://${host}${normalizedPath}`;
 }
 
 /**

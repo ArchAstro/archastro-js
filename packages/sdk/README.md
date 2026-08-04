@@ -93,6 +93,9 @@ See [React Native guide](./docs/react-native.md).
 - [Integration scenarios](./docs/scenarios.md): read the current user, list
   teams, and create an agent with snippets that were smoke-tested against the
   local platform dev harness.
+- [Custom-object collaboration](./docs/custom-object-collaboration.md): team-owned
+  objects, same-origin cookie authentication, realtime snapshots, reconnect
+  recovery, presence, and React cleanup.
 
 ## Common Resource Pattern
 

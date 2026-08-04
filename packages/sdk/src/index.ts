@@ -12,3 +12,33 @@ export { ApiActivityFeedChannel } from "./channels/api_activity_feed_channel.js"
 export { ApiChatChannel } from "./channels/api_chat_channel.js";
 export { ApiObjectChannel } from "./channels/api_object_channel.js";
 export { ApiTasksChannel } from "./channels/api_tasks_channel.js";
+export {
+  CustomObjectSubscriptions,
+  type DeepPartial,
+  type CustomObjectConnectionState,
+  type CustomObjectSnapshot,
+  type CustomObjectUpdate,
+  type CustomObjectPresence,
+  type CustomObjectPresenceUpdate,
+  type CustomObjectPresenceLeave,
+  type CustomObjectSubscriptionOptions,
+  type CustomObjectSubscription,
+} from "./custom-object-subscriptions.js";
+export {
+  ApiError,
+  AuthenticationError,
+  AuthorizationError,
+  NotFoundError,
+  ValidationError,
+  NetworkError,
+} from "./runtime/http-client.js";
+export {
+  createPlatformSocket,
+  type PlatformSocketOptions,
+  Socket,
+  Channel,
+  ChannelError,
+  ChannelReplyError,
+  type SocketConfig,
+  type SocketEvent,
+} from "./platform-socket.js";

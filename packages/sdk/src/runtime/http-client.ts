@@ -10,6 +10,8 @@ export interface HttpClientConfig {
   onRefreshToken?: () => Promise<string>;
   pathPrefix?: string;
   defaultHeaders?: Record<string, string>;
+  /** Fetch credential policy. Use `include` for a same-origin session gateway. */
+  credentials?: RequestCredentials;
   /** When true, only /api/v2/auth/* requests are allowed. Used by the
    *  internal refresh client to prevent accidental re-entrant calls. */
   refreshOnly?: boolean;
@@ -30,6 +32,30 @@ export class ApiError extends Error {
   }
 }
 
+export class AuthenticationError extends ApiError {
+  override name = "AuthenticationError";
+}
+
+export class AuthorizationError extends ApiError {
+  override name = "AuthorizationError";
+}
+
+export class NotFoundError extends ApiError {
+  override name = "NotFoundError";
+}
+
+export class ValidationError extends ApiError {
+  override name = "ValidationError";
+}
+
+export class NetworkError extends ApiError {
+  override name = "NetworkError";
+
+  constructor(message: string, public readonly cause?: unknown) {
+    super(0, "network_error", message);
+  }
+}
+
 export class HttpClient {
   private config: HttpClientConfig;
   private _refreshPromise: Promise<string> | null = null;
@@ -46,6 +72,11 @@ export class HttpClient {
     // fallback keeps the 401-retry Authorization header correct.
     const fromProvider = this.config.getAccessToken?.();
     return fromProvider || this.config.accessToken;
+  }
+
+  /** Current bearer token used by hand-written realtime transports. */
+  getAccessToken(): string | undefined {
+    return this.getToken();
   }
 
   private transformPath(path: string): string {
@@ -82,6 +113,7 @@ export class HttpClient {
 
       const fetchOptions: RequestInit = {
         method,
+        credentials: this.config.credentials,
         headers: {
           ...(this.config.defaultHeaders || {}),
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -172,6 +204,7 @@ export class HttpClient {
 
       return fetch(url, {
         method: "GET",
+        credentials: this.config.credentials,
         headers: {
           ...(this.config.defaultHeaders || {}),
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -245,6 +278,7 @@ export class HttpClient {
 
       return fetch(url, {
         method: "GET",
+        credentials: this.config.credentials,
         headers: {
           ...(this.config.defaultHeaders || {}),
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -331,6 +365,7 @@ export class HttpClient {
 
       const fetchOptions: RequestInit = {
         method,
+        credentials: this.config.credentials,
         headers: {
           ...(this.config.defaultHeaders || {}),
           ...(token ? { Authorization: `Bearer ${token}` } : {}),

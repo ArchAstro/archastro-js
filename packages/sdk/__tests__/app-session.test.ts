@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { PlatformClient } from "../src/index.js";
+import { PlatformClient, createPlatformSocket } from "../src/index.js";
 import type { SessionStorage, AppSession } from "../src/app-session.js";
 import { platformSocketUrl } from "../src/runtime/url.js";
 
@@ -28,6 +28,57 @@ describe("platformSocketUrl", () => {
     expect(platformSocketUrl("https://platform.archastro.ai/")).toBe(
       "wss://platform.archastro.ai/socket/api/websocket",
     );
+    expect(
+      platformSocketUrl(
+        "https://code.intern.archastro.ai",
+        "/api/archastro/platform/socket",
+      ),
+    ).toBe(
+      "wss://code.intern.archastro.ai/api/archastro/platform/socket",
+    );
+  });
+
+  it("opens a cookie-authenticated same-origin socket without token query params", async () => {
+    let openedUrl = "";
+    class CapturingWebSocket {
+      private listeners = new Map<string, Set<(event: unknown) => void>>();
+
+      constructor(url: string) {
+        openedUrl = url;
+        setTimeout(() => this.emit("open", {}), 0);
+      }
+
+      addEventListener(event: string, listener: (value: unknown) => void) {
+        const listeners = this.listeners.get(event) ?? new Set();
+        listeners.add(listener);
+        this.listeners.set(event, listeners);
+      }
+
+      removeEventListener(event: string, listener: (value: unknown) => void) {
+        this.listeners.get(event)?.delete(listener);
+      }
+
+      send() {}
+      close() {}
+
+      private emit(event: string, value: unknown) {
+        for (const listener of this.listeners.get(event) ?? []) listener(value);
+      }
+    }
+    vi.stubGlobal("WebSocket", CapturingWebSocket);
+
+    const socket = createPlatformSocket({
+      apiBaseUrl: "https://code.intern.archastro.ai",
+      socketPath: "/api/archastro/platform/socket",
+      socketConfig: { autoReconnect: false },
+    });
+    await socket.connect();
+
+    expect(openedUrl).toBe(
+      "wss://code.intern.archastro.ai/api/archastro/platform/socket?vsn=2.0.0",
+    );
+    expect(openedUrl).not.toContain("token=");
+    await socket.disconnect();
   });
 });
 

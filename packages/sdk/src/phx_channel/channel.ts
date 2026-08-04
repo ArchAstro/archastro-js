@@ -21,6 +21,19 @@ export class ChannelError extends Error {
   }
 }
 
+export class ChannelReplyError extends ChannelError {
+  constructor(
+    public readonly event: string,
+    public readonly topic: string,
+    public readonly response: unknown
+  ) {
+    super(
+      `Push '${event}' rejected on ${topic}: ${JSON.stringify(response)}`
+    );
+    this.name = "ChannelReplyError";
+  }
+}
+
 type ChannelState = "closed" | "joining" | "joined" | "leaving" | "errored";
 
 export class Channel {
@@ -192,7 +205,18 @@ export class Channel {
       this.pendingReplies.set(ref, {
         resolve: (v: unknown) => {
           clearTimeout(timer);
-          resolve(v);
+          const reply = v as { status?: unknown; response?: unknown };
+          if (reply?.status === "ok") {
+            resolve(reply);
+          } else if (reply?.status === "error") {
+            reject(new ChannelReplyError(event, this.topic, reply.response));
+          } else {
+            reject(
+              new ChannelError(
+                `Malformed reply for push '${event}' on ${this.topic}`
+              )
+            );
+          }
         },
         reject: (e: Error) => {
           clearTimeout(timer);
@@ -254,6 +278,21 @@ export class Channel {
       this.triggerEvent("phx_error", payload);
     } else {
       this.triggerEvent(event, payload);
+    }
+  }
+
+  /** @internal Reject in-flight work immediately when its transport closes. */
+  onSocketClose(error: Error): void {
+    if (this._state !== "closed" && this._state !== "leaving") {
+      this._state = "errored";
+    }
+    for (const pending of this.pendingReplies.values()) {
+      pending.reject(error);
+    }
+    this.pendingReplies.clear();
+    for (const buffered of this.pushBuffer.splice(0)) {
+      clearTimeout(buffered.timer);
+      buffered.reject(error);
     }
   }
 
