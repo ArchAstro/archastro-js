@@ -14,8 +14,10 @@ belongs in hand-written SDK modules.
 Regeneration is not permission to remove those modules or their public wiring.
 After regeneration, run the hand-written public-surface and behavior tests. If
 a generated entry point such as `PlatformClient` or `index.ts` exposes a
-hand-written extension, preserve that integration and keep a test that fails
-when regeneration drops it.
+hand-written extension, the generator may emit a small delegation call and
+barrel export. Keep transport, authentication, retry, and lifecycle policy
+behind that hand-written entrypoint, and keep a test that fails when
+regeneration drops the delegation.
 
 The narrow exception is behavior that is mechanically derivable from the API
 contract. Add that behavior to the generator input or generator itself instead
@@ -24,7 +26,13 @@ of maintaining parallel hand-written copies.
 ## Positive example
 
 ```ts
-// Hand-written lifecycle manager built on the generated channel binding.
+// Generated client glue delegates without owning extension policy.
+this.customObjectSubscriptions = customObjectSubscriptionsForClient(
+  config,
+  this.http,
+);
+
+// Application code uses the hand-written lifecycle manager.
 const subscription = client.customObjectSubscriptions.subscribe({
   objectId,
   onSnapshot,
@@ -39,16 +47,22 @@ expect(client.customObjectSubscriptions).toBeInstanceOf(
 ```
 
 The generated channel supplies join, push, and event methods. The hand-written
-manager owns reconnect, convergence, presence refresh, and cleanup, while the
-public-surface assertion catches accidental removal during regeneration.
+factory owns socket authentication and routing; the manager owns reconnect,
+convergence, presence refresh, and cleanup. The public-surface assertion catches
+accidental removal during regeneration.
 
 ## Counterexample
 
 ```ts
-// Do not replace a hand-written manager with a generated channel primitive.
-const channel = await ApiObjectChannel.joinById(socket, objectId);
+// Do not embed extension policy in the generator.
+this.customObjectSubscriptions = new CustomObjectSubscriptions(() =>
+  createPlatformSocket({
+    accessToken: this.http.getAccessToken(),
+    socketPath: `${config.pathPrefix}/socket`,
+  }),
+);
 ```
 
-The channel can move frames, but it does not preserve queued edits, recover an
-authoritative snapshot, refresh presence, classify terminal access failures, or
-clean up a mounted application's subscription lifecycle.
+This couples codegen to one runtime's authentication, routing, and reconnect
+policy. Those decisions drift independently of the API contract and belong in
+the hand-written extension entrypoint.
