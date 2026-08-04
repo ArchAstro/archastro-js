@@ -1,5 +1,10 @@
 import type { z } from "zod";
 
+import type {
+  PlatformClient,
+  PlatformClientClass,
+  PlatformClientConfig,
+} from "./client.js";
 import { ApiObjectChannel } from "./channels/api_object_channel.js";
 import {
   ApiError,
@@ -60,7 +65,7 @@ export interface CustomObjectPresenceLeave {
 }
 
 export interface CustomObjectSubscriptionOptions<
-  TFields extends Record<string, unknown>,
+  TFields extends object,
 > {
   objectId: string;
   /** Stable identity for this browser tab. Generated when omitted. */
@@ -80,7 +85,7 @@ export interface CustomObjectSubscriptionOptions<
 }
 
 export interface CustomObjectSubscription<
-  TFields extends Record<string, unknown>,
+  TFields extends object,
 > {
   readonly state: CustomObjectConnectionState;
   update(fields: DeepPartial<TFields>): Promise<void>;
@@ -92,10 +97,13 @@ export interface CustomObjectSubscription<
 type SocketFactory = () => Socket;
 type Unsubscribe = () => void;
 
-export interface CustomObjectSubscriptionsClientConfig {
-  baseUrl?: string;
-  pathPrefix?: string;
-  defaultHeaders?: Record<string, string>;
+export interface CustomObjectSubscriptionsClientConfig
+  extends PlatformClientConfig {
+  socketPath?: string;
+}
+
+export interface CustomObjectSubscriptionsExtensionOptions {
+  /** Override the socket path derived from the client's pathPrefix. */
   socketPath?: string;
 }
 
@@ -107,17 +115,65 @@ interface QueuedPatch<TFields> {
 export class CustomObjectSubscriptions {
   constructor(private readonly createSocket: SocketFactory) {}
 
-  subscribe<TFields extends Record<string, unknown>>(
+  subscribe<TFields extends object>(
     options: CustomObjectSubscriptionOptions<TFields>,
   ): CustomObjectSubscription<TFields> {
     return new ManagedCustomObjectSubscription(this.createSocket, options);
   }
 }
 
-/**
- * Hand-written PlatformClient extension seam. Generated clients delegate here
- * so socket authentication and routing policy survive SDK regeneration.
- */
+export type CustomObjectSubscriptionsPlatformClient<
+  TClient extends PlatformClient = PlatformClient,
+> = TClient & {
+  readonly customObjectSubscriptions: CustomObjectSubscriptions;
+};
+
+type CustomObjectSubscriptionsCapability = {
+  readonly customObjectSubscriptions: CustomObjectSubscriptions;
+};
+
+/** Add managed custom-object realtime to any generated PlatformClient class. */
+export function withCustomObjectSubscriptions<
+  TBase extends PlatformClientClass,
+>(Base: TBase) {
+  return extendWithCustomObjectSubscriptions(Base, {});
+}
+
+/** Configure managed custom-object realtime before extending a client class. */
+export function customObjectSubscriptionsExtension(
+  options: CustomObjectSubscriptionsExtensionOptions,
+) {
+  return <TBase extends PlatformClientClass>(Base: TBase) =>
+    extendWithCustomObjectSubscriptions(Base, options);
+}
+
+function extendWithCustomObjectSubscriptions<
+  TBase extends PlatformClientClass,
+>(
+  Base: TBase,
+  options: CustomObjectSubscriptionsExtensionOptions,
+): PlatformClientClass<
+  InstanceType<TBase> & CustomObjectSubscriptionsCapability
+> {
+  class CustomObjectSubscriptionsPlatformClient extends Base {
+    readonly customObjectSubscriptions: CustomObjectSubscriptions;
+
+    constructor(...args: any[]) {
+      super(...args);
+      const config = (args[0] ?? {}) as PlatformClientConfig;
+      this.customObjectSubscriptions = customObjectSubscriptionsForClient(
+        { ...config, socketPath: options.socketPath },
+        this.http,
+      );
+    }
+  }
+
+  return CustomObjectSubscriptionsPlatformClient as unknown as PlatformClientClass<
+    InstanceType<TBase> & CustomObjectSubscriptionsCapability
+  >;
+}
+
+/** Build the managed realtime capability from generated client state. */
 export function customObjectSubscriptionsForClient(
   config: CustomObjectSubscriptionsClientConfig,
   http: HttpClient,
@@ -141,8 +197,27 @@ export function customObjectSubscriptionsForClient(
   );
 }
 
+export {
+  ApiError,
+  AuthenticationError,
+  AuthorizationError,
+  NetworkError,
+  NotFoundError,
+  ValidationError,
+} from "./runtime/http-client.js";
+export {
+  Channel,
+  ChannelError,
+  ChannelReplyError,
+  Socket,
+  createPlatformSocket,
+  type PlatformSocketOptions,
+  type SocketConfig,
+  type SocketEvent,
+} from "./platform-socket.js";
+
 class ManagedCustomObjectSubscription<
-  TFields extends Record<string, unknown>,
+  TFields extends object,
 > implements CustomObjectSubscription<TFields> {
   private _state: CustomObjectConnectionState = "connecting";
   private socket: Socket | null = null;

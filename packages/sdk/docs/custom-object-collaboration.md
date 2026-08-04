@@ -16,21 +16,36 @@ construct one client for the authenticated browser session and point both HTTP
 and WebSocket traffic at that backend:
 
 ```ts
-import { PlatformClient } from "@archastro/sdk";
+import {
+  PlatformClient,
+  withCustomObjectSubscriptions,
+} from "@archastro/sdk";
 
-export const archAstro = new PlatformClient({
+const RealtimePlatformClient = PlatformClient.extend(
+  withCustomObjectSubscriptions,
+);
+
+export const archAstro = new RealtimePlatformClient({
   baseUrl: window.location.origin,
   pathPrefix: "/api/archastro/platform",
   credentials: "include",
-  socketPath: "/api/archastro/platform/socket",
 });
 ```
+
+`extend` uses the TypeScript class-expression mixin pattern. It returns a new
+client class, so generated resources and static factories remain available and
+the compiler infers `customObjectSubscriptions` on its instances. Extensions
+can be chained by calling `extend` again on the returned class.
 
 The SDK sends HTTP requests to the configured `pathPrefix`. WebSocket
 subscriptions connect to `socketPath`; the browser includes same-origin cookies
 during the upgrade. Access and refresh tokens therefore remain unavailable to
 browser JavaScript. The backend must authenticate the cookie before proxying
 HTTP requests or accepting the WebSocket upgrade.
+
+The extension derives `/api/archastro/platform/socket` from the configured
+`pathPrefix`. For a nonstandard route, pass
+`customObjectSubscriptionsExtension({ socketPath })` to `extend` instead.
 
 ## List and create team-owned objects
 
