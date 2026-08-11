@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   AuthenticationError,
   AuthorizationError,
+  ChannelReplyError,
   customObjectSubscriptionsExtension,
   CustomObjectSubscriptions,
   NotFoundError,
@@ -26,6 +27,7 @@ class FakeChannel {
   leaveCount = 0;
   readonly joinPayloads: Record<string, unknown>[] = [];
   pushGate: Promise<void> | null = null;
+  pushError: Error | null = null;
 
   constructor(
     private readonly snapshot: unknown,
@@ -47,6 +49,7 @@ class FakeChannel {
   async push(event: string, payload: unknown): Promise<unknown> {
     this.pushes.push({ event, payload });
     await this.pushGate;
+    if (this.pushError) throw this.pushError;
     return { status: "ok" };
   }
 
@@ -619,5 +622,78 @@ describe("CustomObjectSubscriptions", () => {
         ({ event }) => event === "presence_update",
       ),
     ).toHaveLength(2);
+  });
+
+  it("keeps the live transport when a presence update is rate limited", async () => {
+    vi.useFakeTimers();
+    const socket = new FakeSocket(validSnapshot("System map"));
+    socket.channelInstance.pushError = new ChannelReplyError(
+      "presence_update",
+      "api:object:cobj_diagram",
+      { reason: "rate_limited" },
+    );
+    const states: CustomObjectConnectionState[] = [];
+    const errors: unknown[] = [];
+    let factoryCalls = 0;
+    const subscription = new CustomObjectSubscriptions(() => {
+      factoryCalls++;
+      return socket as never;
+    }).subscribe<DiagramFields>({
+      objectId: "cobj_diagram",
+      onSnapshot: () => {},
+      onUpdate: () => {},
+      onStateChange: (state) => states.push(state),
+      onError: (error) => errors.push(error),
+    });
+    await settle();
+    await vi.waitFor(() => expect(subscription.state).toBe("live"));
+
+    await expect(
+      subscription.updatePresence({
+        cursor: { x: 12, y: 34 },
+        selectedElementIds: [],
+        activity: "active",
+      }),
+    ).resolves.toBeUndefined();
+    await vi.advanceTimersByTimeAsync(1_000);
+
+    expect(subscription.state).toBe("live");
+    expect(states).toEqual(["connecting", "live"]);
+    expect(errors).toEqual([]);
+    expect(factoryCalls).toBe(1);
+    expect(socket.disconnectCount).toBe(0);
+    subscription.close();
+  });
+
+  it("still terminates when a presence update is forbidden", async () => {
+    const socket = new FakeSocket(validSnapshot("Readonly map"));
+    socket.channelInstance.pushError = new ChannelReplyError(
+      "presence_update",
+      "api:object:cobj_diagram",
+      { reason: "forbidden" },
+    );
+    const errors: unknown[] = [];
+    const subscription = new CustomObjectSubscriptions(
+      () => socket as never,
+    ).subscribe<DiagramFields>({
+      objectId: "cobj_diagram",
+      onSnapshot: () => {},
+      onUpdate: () => {},
+      onStateChange: () => {},
+      onError: (error) => errors.push(error),
+    });
+    await vi.waitFor(() => expect(subscription.state).toBe("live"));
+
+    await expect(
+      subscription.updatePresence({
+        cursor: null,
+        selectedElementIds: [],
+        activity: "idle",
+      }),
+    ).rejects.toBeInstanceOf(AuthorizationError);
+
+    expect(subscription.state).toBe("unauthorized");
+    expect(errors).toEqual([expect.any(AuthorizationError)]);
+    expect(socket.disconnectCount).toBe(1);
   });
 });

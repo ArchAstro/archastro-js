@@ -176,4 +176,71 @@ describe("CustomObjectSubscriptions real transport", () => {
 
     rig.client.closeAllSockets();
   });
+
+  it("keeps the WebSocket live when Phoenix rate limits a presence update", async () => {
+    // Run a real Phoenix-frame exchange where the server accepts the join,
+    // rejects only cursor presence, then accepts a durable save on the same socket.
+    const rig = await bootHarness();
+    await rig.client.registerScenario({
+      topic: "api:object:cobj_rate_limited",
+      onJoin: [
+        {
+          type: "reply",
+          payload: {
+            id: "cobj_rate_limited",
+            fields: { title: "System map", elements_by_id: {} },
+            readonly: false,
+            connection_id: "tab_rate_limited",
+            presence: [],
+          },
+        },
+      ],
+      onMessage: {
+        presence_update: [
+          { type: "replyError", payload: { reason: "rate_limited" } },
+        ],
+        save: [{ type: "autoReply" }],
+      },
+    });
+
+    const states: CustomObjectConnectionState[] = [];
+    const errors: unknown[] = [];
+    const subscription = new CustomObjectSubscriptions(
+      () => rig.socket,
+    ).subscribe<DiagramFields>({
+      objectId: "cobj_rate_limited",
+      onSnapshot: () => {},
+      onUpdate: () => {},
+      onStateChange: (state) => states.push(state),
+      onError: (error) => errors.push(error),
+    });
+    await vi.waitFor(() => expect(subscription.state).toBe("live"));
+
+    // Cross the public presence boundary, then prove the same joined transport
+    // remains usable instead of entering the SDK's reconnect state machine.
+    await expect(
+      subscription.updatePresence({
+        cursor: { x: 12, y: 34 },
+        selectedElementIds: [],
+        activity: "active",
+      }),
+    ).resolves.toBeUndefined();
+    await expect(subscription.save()).resolves.toBeUndefined();
+
+    expect(subscription.state).toBe("live");
+    expect(states).toEqual(["connecting", "live"]);
+    expect(errors).toEqual([]);
+    expect(
+      await rig.client.observations(
+        "api:object:cobj_rate_limited",
+        "presence_update",
+      ),
+    ).toHaveLength(1);
+    expect(
+      await rig.client.observations("api:object:cobj_rate_limited", "save"),
+    ).toHaveLength(1);
+
+    subscription.close();
+    rig.client.closeAllSockets();
+  });
 });
