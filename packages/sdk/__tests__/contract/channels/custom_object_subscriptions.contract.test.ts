@@ -198,6 +198,7 @@ describe("CustomObjectSubscriptions real transport", () => {
       onMessage: {
         presence_update: [
           { type: "replyError", payload: { reason: "rate_limited" } },
+          { type: "autoReply" },
         ],
         save: [{ type: "autoReply" }],
       },
@@ -218,24 +219,46 @@ describe("CustomObjectSubscriptions real transport", () => {
 
     // Cross the public presence boundary, then prove the same joined transport
     // remains usable instead of entering the SDK's reconnect state machine.
+    const firstPresence = subscription.updatePresence({
+      cursor: { x: 12, y: 34 },
+      selectedElementIds: [],
+      activity: "active",
+    });
+    const coalescedPresence = subscription.updatePresence({
+      cursor: { x: 56, y: 78 },
+      selectedElementIds: ["latest"],
+      activity: "active",
+    });
+    const latestPresence = subscription.updatePresence({
+      cursor: { x: 90, y: 12 },
+      selectedElementIds: ["latest"],
+      activity: "active",
+    });
     await expect(
-      subscription.updatePresence({
-        cursor: { x: 12, y: 34 },
-        selectedElementIds: [],
-        activity: "active",
-      }),
-    ).resolves.toBeUndefined();
+      Promise.all([firstPresence, coalescedPresence, latestPresence]),
+    ).resolves.toEqual([undefined, undefined, undefined]);
     await expect(subscription.save()).resolves.toBeUndefined();
 
+    const presenceObservations = await rig.client.observations(
+      "api:object:cobj_rate_limited",
+      "presence_update",
+    );
     expect(subscription.state).toBe("live");
     expect(states).toEqual(["connecting", "live"]);
     expect(errors).toEqual([]);
+    expect(presenceObservations).toHaveLength(2);
     expect(
-      await rig.client.observations(
-        "api:object:cobj_rate_limited",
-        "presence_update",
-      ),
-    ).toHaveLength(1);
+      presenceObservations[1]!.ts - presenceObservations[0]!.ts,
+    ).toBeGreaterThanOrEqual(45);
+    expect(presenceObservations[1]).toMatchObject({
+      params: {
+        presence: {
+          cursor: { x: 90, y: 12 },
+          selected_element_ids: ["latest"],
+          state: "active",
+        },
+      },
+    });
     expect(
       await rig.client.observations("api:object:cobj_rate_limited", "save"),
     ).toHaveLength(1);
