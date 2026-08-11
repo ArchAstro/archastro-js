@@ -19,6 +19,8 @@ import { createPlatformSocket } from "./platform-socket.js";
 import { ChannelReplyError } from "./phx_channel/channel.js";
 import type { Socket } from "./phx_channel/socket.js";
 
+const PRESENCE_UPDATE_INTERVAL_MS = 1000 / 20;
+
 export type DeepPartial<T> = T extends readonly unknown[]
   ? T
   : T extends object
@@ -232,6 +234,14 @@ class ManagedCustomObjectSubscription<
   private connectionId: string;
   private lastPresence: CustomObjectPresenceUpdate | null = null;
   private presenceHeartbeat: ReturnType<typeof setInterval> | null = null;
+  private pendingPresence: CustomObjectPresenceUpdate | null = null;
+  private presenceWaiters: Array<{
+    resolve(): void;
+    reject(error: unknown): void;
+  }> = [];
+  private presenceFlushTimer: ReturnType<typeof setTimeout> | null = null;
+  private presenceSending = false;
+  private lastPresenceSentAt: number | null = null;
 
   constructor(
     private readonly createSocket: SocketFactory,
@@ -285,22 +295,9 @@ class ManagedCustomObjectSubscription<
         "Presence is unavailable while the subscription is not live",
       );
     }
-    try {
-      this.lastPresence = presence;
-      this.startPresenceHeartbeat();
-      await sendPresenceUpdate(this.channel, presence);
-    } catch (error) {
-      const classified = classifySubscriptionError(error);
-      if (this.isTerminalError(classified)) {
-        this.options.onError(classified);
-        this.terminateForError(classified);
-      } else if (classified instanceof NetworkError) {
-        this.handleTransportLoss(classified);
-      } else {
-        this.options.onError(classified);
-      }
-      throw classified;
-    }
+    this.lastPresence = presence;
+    this.startPresenceHeartbeat();
+    return this.enqueuePresenceUpdate(presence);
   }
 
   async save(): Promise<void> {
@@ -392,6 +389,7 @@ class ManagedCustomObjectSubscription<
       await this.replayQueuedPatches();
       if (generation !== this.generation || this.isTerminal()) return;
       this.reconnectAttempt = 0;
+      if (this.lastPresence) this.lastPresenceSentAt = presenceNow();
       this.transition("live");
       if (this.lastPresence) {
         await sendPresenceUpdate(channel, this.lastPresence);
@@ -590,6 +588,7 @@ class ManagedCustomObjectSubscription<
 
   private disposeTransport(graceful: boolean): void {
     this.stopPresenceHeartbeat();
+    this.stopPresencePublisher();
     for (const unsubscribe of this.transportUnsubscribers.splice(0))
       unsubscribe();
     const channel = this.channel;
@@ -636,8 +635,7 @@ class ManagedCustomObjectSubscription<
     if (!this.lastPresence || this._state !== "live") return;
     this.presenceHeartbeat = setInterval(() => {
       if (!this.channel || this._state !== "live" || !this.lastPresence) return;
-      void sendPresenceUpdate(this.channel, this.lastPresence)
-        .catch((error) => this.handleTransportLoss(error));
+      void this.enqueuePresenceUpdate(this.lastPresence).catch(() => undefined);
     }, 25_000);
   }
 
@@ -645,6 +643,95 @@ class ManagedCustomObjectSubscription<
     if (!this.presenceHeartbeat) return;
     clearInterval(this.presenceHeartbeat);
     this.presenceHeartbeat = null;
+  }
+
+  private enqueuePresenceUpdate(
+    presence: CustomObjectPresenceUpdate,
+  ): Promise<void> {
+    this.pendingPresence = presence;
+    const result = new Promise<void>((resolve, reject) => {
+      this.presenceWaiters.push({ resolve, reject });
+    });
+    this.schedulePresenceFlush();
+    return result;
+  }
+
+  private schedulePresenceFlush(): void {
+    if (
+      this.presenceFlushTimer ||
+      this.presenceSending ||
+      !this.pendingPresence
+    ) {
+      return;
+    }
+    const delay =
+      this.lastPresenceSentAt === null
+        ? 0
+        : Math.max(
+            0,
+            PRESENCE_UPDATE_INTERVAL_MS -
+              (presenceNow() - this.lastPresenceSentAt),
+          );
+    if (delay === 0) {
+      void this.flushPresence();
+      return;
+    }
+    this.presenceFlushTimer = setTimeout(() => {
+      this.presenceFlushTimer = null;
+      void this.flushPresence();
+    }, delay);
+  }
+
+  private async flushPresence(): Promise<void> {
+    if (this.presenceSending || !this.pendingPresence) return;
+    if (this._state !== "live" || !this.channel) {
+      this.rejectPendingPresence(
+        new NetworkError(
+          "Presence is unavailable while the subscription is not live",
+        ),
+      );
+      return;
+    }
+
+    const presence = this.pendingPresence;
+    const waiters = this.presenceWaiters.splice(0);
+    this.pendingPresence = null;
+    this.presenceSending = true;
+    this.lastPresenceSentAt = presenceNow();
+    try {
+      await sendPresenceUpdate(this.channel, presence);
+      for (const waiter of waiters) waiter.resolve();
+    } catch (error) {
+      const classified = classifySubscriptionError(error);
+      if (this.isTerminalError(classified)) {
+        this.options.onError(classified);
+        this.terminateForError(classified);
+      } else if (classified instanceof NetworkError) {
+        this.handleTransportLoss(classified);
+      } else {
+        this.options.onError(classified);
+      }
+      for (const waiter of waiters) waiter.reject(classified);
+    } finally {
+      this.presenceSending = false;
+      this.schedulePresenceFlush();
+    }
+  }
+
+  private stopPresencePublisher(): void {
+    if (this.presenceFlushTimer) clearTimeout(this.presenceFlushTimer);
+    this.presenceFlushTimer = null;
+    this.lastPresenceSentAt = null;
+    this.rejectPendingPresence(
+      new NetworkError(
+        "Presence is unavailable while the subscription is not live",
+      ),
+    );
+  }
+
+  private rejectPendingPresence(error: ApiError): void {
+    this.pendingPresence = null;
+    for (const waiter of this.presenceWaiters.splice(0)) waiter.reject(error);
   }
 }
 
@@ -697,6 +784,10 @@ function isRateLimitedPresenceError(error: unknown): boolean {
   return ["reason", "code", "error"].some(
     (key) => response[key] === "rate_limited",
   );
+}
+
+function presenceNow(): number {
+  return typeof performance === "undefined" ? Date.now() : performance.now();
 }
 
 function parsePresence(payload: unknown): CustomObjectPresence | null {

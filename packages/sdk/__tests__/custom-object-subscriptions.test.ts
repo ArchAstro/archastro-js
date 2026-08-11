@@ -6,6 +6,7 @@ import {
   ChannelReplyError,
   customObjectSubscriptionsExtension,
   CustomObjectSubscriptions,
+  NetworkError,
   NotFoundError,
   PlatformClient,
   ValidationError,
@@ -665,6 +666,69 @@ describe("CustomObjectSubscriptions", () => {
     subscription.close();
   });
 
+  it("coalesces presence updates onto a 20 Hz wire interval", async () => {
+    vi.useFakeTimers();
+    const socket = new FakeSocket(validSnapshot("System map"));
+    const subscription = new CustomObjectSubscriptions(
+      () => socket as never,
+    ).subscribe<DiagramFields>({
+      objectId: "cobj_diagram",
+      onSnapshot: () => {},
+      onUpdate: () => {},
+      onStateChange: () => {},
+      onError: () => {},
+    });
+    await settle();
+    await vi.waitFor(() => expect(subscription.state).toBe("live"));
+
+    await subscription.updatePresence({
+      cursor: { x: 1, y: 1 },
+      selectedElementIds: [],
+      activity: "active",
+    });
+    await vi.advanceTimersByTimeAsync(33);
+    const second = subscription.updatePresence({
+      cursor: { x: 2, y: 2 },
+      selectedElementIds: [],
+      activity: "active",
+    });
+    const third = subscription.updatePresence({
+      cursor: { x: 3, y: 3 },
+      selectedElementIds: ["latest"],
+      activity: "active",
+    });
+    await vi.advanceTimersByTimeAsync(16);
+
+    expect(
+      socket.channelInstance.pushes.filter(
+        ({ event }) => event === "presence_update",
+      ),
+    ).toHaveLength(1);
+
+    await vi.advanceTimersByTimeAsync(1);
+    await Promise.all([second, third]);
+    expect(
+      socket.channelInstance.pushes.filter(
+        ({ event }) => event === "presence_update",
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          presence: expect.objectContaining({ cursor: { x: 1, y: 1 } }),
+        }),
+      }),
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          presence: expect.objectContaining({
+            cursor: { x: 3, y: 3 },
+            selected_element_ids: ["latest"],
+          }),
+        }),
+      }),
+    ]);
+    subscription.close();
+  });
+
   it("still terminates when a presence update is forbidden", async () => {
     const socket = new FakeSocket(validSnapshot("Readonly map"));
     socket.channelInstance.pushError = new ChannelReplyError(
@@ -695,5 +759,48 @@ describe("CustomObjectSubscriptions", () => {
     expect(subscription.state).toBe("unauthorized");
     expect(errors).toEqual([expect.any(AuthorizationError)]);
     expect(socket.disconnectCount).toBe(1);
+  });
+
+  it("still reconnects when a presence update hits a network failure", async () => {
+    vi.useFakeTimers();
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    const first = new FakeSocket(validSnapshot("Initial"));
+    first.channelInstance.pushError = new Error("socket closed");
+    const second = new FakeSocket(validSnapshot("Recovered"));
+    const sockets = [first, second];
+    let factoryCalls = 0;
+    const subscription = new CustomObjectSubscriptions(() => {
+      factoryCalls++;
+      return sockets.shift() as never;
+    }).subscribe<DiagramFields>({
+      objectId: "cobj_diagram",
+      onSnapshot: () => {},
+      onUpdate: () => {},
+      onStateChange: () => {},
+      onError: () => {},
+    });
+    await settle();
+    await vi.waitFor(() => expect(subscription.state).toBe("live"));
+
+    await expect(
+      subscription.updatePresence({
+        cursor: { x: 12, y: 34 },
+        selectedElementIds: [],
+        activity: "active",
+      }),
+    ).rejects.toBeInstanceOf(NetworkError);
+    expect(subscription.state).toBe("reconnecting");
+    expect(first.disconnectCount).toBe(1);
+
+    await vi.advanceTimersByTimeAsync(250);
+    await settle();
+    expect(subscription.state).toBe("live");
+    expect(factoryCalls).toBe(2);
+    expect(
+      second.channelInstance.pushes.filter(
+        ({ event }) => event === "presence_update",
+      ),
+    ).toHaveLength(1);
+    subscription.close();
   });
 });
