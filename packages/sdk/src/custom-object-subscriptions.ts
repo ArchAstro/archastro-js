@@ -16,6 +16,7 @@ import {
 } from "./runtime/http-client.js";
 import type { HttpClient } from "./runtime/http-client.js";
 import { createPlatformSocket } from "./platform-socket.js";
+import { ChannelReplyError } from "./phx_channel/channel.js";
 import type { Socket } from "./phx_channel/socket.js";
 
 export type DeepPartial<T> = T extends readonly unknown[]
@@ -285,9 +286,9 @@ class ManagedCustomObjectSubscription<
       );
     }
     try {
-      await this.channel.presenceUpdate({ presence: toWirePresence(presence) });
       this.lastPresence = presence;
       this.startPresenceHeartbeat();
+      await sendPresenceUpdate(this.channel, presence);
     } catch (error) {
       const classified = classifySubscriptionError(error);
       if (this.isTerminalError(classified)) {
@@ -393,9 +394,7 @@ class ManagedCustomObjectSubscription<
       this.reconnectAttempt = 0;
       this.transition("live");
       if (this.lastPresence) {
-        await channel.presenceUpdate({
-          presence: toWirePresence(this.lastPresence),
-        });
+        await sendPresenceUpdate(channel, this.lastPresence);
         this.startPresenceHeartbeat();
       }
     } catch (error) {
@@ -637,8 +636,7 @@ class ManagedCustomObjectSubscription<
     if (!this.lastPresence || this._state !== "live") return;
     this.presenceHeartbeat = setInterval(() => {
       if (!this.channel || this._state !== "live" || !this.lastPresence) return;
-      void this.channel
-        .presenceUpdate({ presence: toWirePresence(this.lastPresence) })
+      void sendPresenceUpdate(this.channel, this.lastPresence)
         .catch((error) => this.handleTransportLoss(error));
     }, 25_000);
   }
@@ -671,6 +669,34 @@ function toWirePresence(
     selected_element_ids: presence.selectedElementIds,
     state: presence.activity,
   };
+}
+
+async function sendPresenceUpdate(
+  channel: ApiObjectChannel,
+  presence: CustomObjectPresenceUpdate,
+): Promise<void> {
+  try {
+    await channel.presenceUpdate({ presence: toWirePresence(presence) });
+  } catch (error) {
+    if (isRateLimitedPresenceError(error)) return;
+    throw error;
+  }
+}
+
+function isRateLimitedPresenceError(error: unknown): boolean {
+  if (
+    !(error instanceof ChannelReplyError) ||
+    error.event !== "presence_update"
+  ) {
+    return false;
+  }
+
+  if (error.response === "rate_limited") return true;
+  if (!isRecord(error.response)) return false;
+  const response = error.response;
+  return ["reason", "code", "error"].some(
+    (key) => response[key] === "rate_limited",
+  );
 }
 
 function parsePresence(payload: unknown): CustomObjectPresence | null {
