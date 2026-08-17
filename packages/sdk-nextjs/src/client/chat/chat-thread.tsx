@@ -168,9 +168,12 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
   // -------------------------------------------------------------------------
 
   const threadOwner: ThreadOwnerScope = useMemo(
-    () => thread.team && !thread.user
-      ? { type: "team", teamId: thread.team }
-      : { type: "user" },
+    () => {
+      const teamId = thread.team ?? undefined;
+      return teamId && !thread.user
+        ? { type: "team", teamId }
+        : { type: "user" };
+    },
     [thread.team, thread.user],
   );
 
@@ -614,7 +617,7 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
   useEffect(() => {
     setThreadHeader({
       threadId: thread.id,
-      teamId: thread.team,
+      teamId: thread.team ?? undefined,
       isConnected,
       connectionError,
       headerActions,
