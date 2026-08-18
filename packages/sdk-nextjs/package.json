@@ -1,6 +1,6 @@
 {
   "name": "@archastro/sdk-nextjs",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Next.js extensions for @archastro/sdk",
   "type": "module",
   "main": "./dist/index.js",
