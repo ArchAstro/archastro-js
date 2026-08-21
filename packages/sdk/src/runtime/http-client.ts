@@ -102,10 +102,11 @@ export class HttpClient {
       body?: unknown;
       headers?: Record<string, string>;
       query?: Record<string, QueryValue>;
+      signal?: AbortSignal;
     } = {}
   ): Promise<T> {
     const doFetch = (): Promise<Response> => {
-      const { method = "GET", body, headers = {}, query } = options;
+      const { method = "GET", body, headers = {}, query, signal } = options;
       const token = this.getToken();
 
       let url = `${this.config.baseUrl}${this.transformPath(path)}`;
@@ -113,6 +114,7 @@ export class HttpClient {
 
       const fetchOptions: RequestInit = {
         method,
+        signal,
         credentials: this.config.credentials,
         headers: {
           ...(this.config.defaultHeaders || {}),
