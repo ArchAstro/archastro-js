@@ -6,6 +6,9 @@
   "defaultVersion": "v1",
   "description": "TypeScript SDK for the ArchAstro Platform API",
   "typescript": {
-    "clientExtensionModules": ["./custom-object-subscriptions.js"]
+    "clientExtensionModules": [
+      "./custom-object-subscriptions.js",
+      "./effective-access.js"
+    ]
   }
 }
