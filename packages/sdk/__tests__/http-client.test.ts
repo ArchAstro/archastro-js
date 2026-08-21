@@ -303,6 +303,31 @@ describe("HttpClient same-origin authentication", () => {
       credentials: "include",
     }));
   });
+
+  it("forwards the caller's abort signal to fetch and refresh retries", async () => {
+    const fetchMock = mockFetch([
+      { status: 401, body: { error: "unauthenticated", message: "expired" } },
+      { status: 200, body: { id: "cobj_1" } },
+    ]);
+    vi.stubGlobal("fetch", fetchMock);
+    const controller = new AbortController();
+    const client = new HttpClient({
+      baseUrl: "https://archcode.test",
+      accessToken: "expired-token",
+      onRefreshToken: async () => "fresh-token",
+    });
+
+    await client.request("/api/v1/custom_objects/cobj_1", {
+      signal: controller.signal,
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    for (const call of fetchMock.mock.calls) {
+      expect(call[1]).toEqual(expect.objectContaining({
+        signal: controller.signal,
+      }));
+    }
+  });
 });
 
 function sseResponse(text: string, status = 200): Response {
