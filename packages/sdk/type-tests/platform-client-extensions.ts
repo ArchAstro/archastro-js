@@ -2,6 +2,10 @@ import { z } from "zod";
 
 import {
   PlatformClient,
+  parseEffectiveAccess,
+  type EffectiveAccess,
+  type ParsedEffectiveAccess,
+  type ParsedEffectiveAccessEntitlement,
   type PlatformClientConstructor,
   withCustomObjectSubscriptions,
 } from "../dist/index.js";
@@ -70,4 +74,37 @@ constructed.customObjectSubscriptions.subscribe<DiagramFields>({
   onUpdate: (update) => update.fields.title,
   onStateChange: (state) => state,
   onError: (error) => error,
+});
+
+const parsedAccess: ParsedEffectiveAccess = parseEffectiveAccess({
+  entitlements: [{
+    key: "archdev_access",
+    granted: true,
+    value_type: "boolean",
+    value: true,
+    provided_by: ["organization"],
+  }],
+  billing: [{ principal_type: "org", administrator: false }],
+});
+const parsedEntitlement: ParsedEffectiveAccessEntitlement | undefined =
+  parsedAccess.entitlements[0];
+if (parsedEntitlement?.supported) {
+  const value: boolean | null | undefined = parsedEntitlement.value;
+  void value;
+}
+
+const wireAccess: EffectiveAccess = {
+  entitlements: [{
+    key: "archdev_access",
+    granted: true,
+    value_type: "boolean",
+    value: true,
+    provided_by: ["organization"],
+  }],
+  billing: [{ principal_type: "org", administrator: false }],
+};
+void wireAccess;
+
+constructed.users.me({ entitlement: ["archdev_access"] }).then((currentUser) => {
+  currentUser.effective_access?.entitlements[0]?.provided_by;
 });
