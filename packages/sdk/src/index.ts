@@ -8,6 +8,7 @@ export * from "./v1/resources/index.js";
 export { PlatformClient, type PlatformClientConfig, type PlatformClientConstructor, type PlatformClientExtension, type PlatformClientClass } from "./client.js";
 export type { AppPlatformClient, ForAppOptions, SessionStorage, AppSession } from "./client.js";
 export { AuthClient, type AuthTokens } from "./auth.js";
+export * from "./analytics.js";
 export { ApiActivityFeedChannel } from "./channels/api_activity_feed_channel.js";
 export { ApiChatChannel } from "./channels/api_chat_channel.js";
 export { ApiObjectChannel } from "./channels/api_object_channel.js";

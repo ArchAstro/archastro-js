@@ -61,6 +61,33 @@ const teams = await client.teams.list();
 console.log(me.id, me.email, teams);
 ```
 
+## Analytics
+
+Use `withAnalytics()` when a browser or app needs first-party analytics. The
+analytics client owns the `aa_anon_id` cookie, writes it with the same HTTPS and
+subdomain behavior as the established web SDK, tracks events through
+`POST /api/v1/t`, and links pre-login visitors to signed-in users through
+`POST /api/v1/i`.
+
+```ts
+import { PlatformClient, withAnalytics } from "@archastro/sdk";
+
+const AnalyticsPlatformClient = PlatformClient.extend(withAnalytics());
+const client = new AnalyticsPlatformClient({
+  baseUrl: "https://platform.archastro.ai",
+  defaultHeaders: { "x-archastro-api-key": publishableKey },
+});
+
+await client.analytics.track("page_view", { source: "landing" }, {
+  keepalive: true,
+});
+
+const anonymousId = client.analytics.getAnonymousId();
+if (anonymousId) {
+  await client.analytics.linkIdentity(anonymousId, user.id);
+}
+```
+
 ## React Native / Expo
 
 Native mobile works out of the box — no Node `ws` / `events` polyfills.
