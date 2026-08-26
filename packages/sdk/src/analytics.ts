@@ -38,6 +38,22 @@ export interface TrackEventsOptions {
   keepalive?: boolean;
 }
 
+export interface SafeBrowserAnalyticsPropertiesOptions {
+  allowedSearchParams?: readonly string[];
+  maxValueLength?: number;
+  includeCurrentPath?: boolean;
+  path?: string | null;
+  redactPathSegments?: boolean;
+  referrer?: string | null;
+  search?: string | URLSearchParams | null;
+}
+
+const DEFAULT_BROWSER_ANALYTICS_SEARCH_PARAMS = [
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+] as const;
+
 export class AnalyticsClient {
   private anonymousId: string | null = null;
   private readonly cookieName: string;
@@ -223,6 +239,46 @@ export function createAnalyticsClient(
   return new AnalyticsClient(http, options);
 }
 
+export function safeBrowserAnalyticsProperties(
+  options: SafeBrowserAnalyticsPropertiesOptions = {},
+): Record<string, string> {
+  const properties: Record<string, string> = {};
+  const maxLength = Math.max(options.maxValueLength ?? 80, 1);
+  const path =
+    options.path === undefined
+      ? options.includeCurrentPath
+        ? currentPathname()
+        : null
+      : options.path;
+  const safePath = path
+    ? safeAnalyticsPath(path, options.redactPathSegments ?? true)
+    : null;
+
+  if (safePath) properties.path = truncateAnalyticsValue(safePath, maxLength);
+
+  const referrer =
+    options.referrer === undefined ? currentReferrer() : options.referrer;
+  const referrerHost = referrer ? parseHostname(referrer) : null;
+  if (referrerHost) {
+    properties.referrer = truncateAnalyticsValue(referrerHost, maxLength);
+  }
+
+  const search = options.search === undefined ? currentSearch() : options.search;
+  const searchParams =
+    typeof search === "string" ? new URLSearchParams(search) : search;
+  const allowedSearchParams =
+    options.allowedSearchParams ?? DEFAULT_BROWSER_ANALYTICS_SEARCH_PARAMS;
+
+  for (const key of allowedSearchParams) {
+    const value = searchParams?.get(key);
+    if (value) {
+      properties[key] = truncateAnalyticsValue(value, maxLength);
+    }
+  }
+
+  return properties;
+}
+
 type AnalyticsBase = new (...args: any[]) => { http: HttpClient };
 
 export function withAnalytics(
@@ -260,4 +316,69 @@ function addAnalytics<TBase extends AnalyticsBase>(
       this.analytics = new AnalyticsClient(this.http, options);
     }
   };
+}
+
+function currentPathname(): string | null {
+  if (typeof window === "undefined") return null;
+  return window.location?.pathname ?? null;
+}
+
+function currentReferrer(): string | null {
+  if (typeof document === "undefined") return null;
+  return document.referrer || null;
+}
+
+function currentSearch(): string | null {
+  if (typeof window === "undefined") return null;
+  return window.location?.search ?? null;
+}
+
+function stripQueryAndHash(value: string): string {
+  return value.split(/[?#]/, 1)[0] ?? "";
+}
+
+function safeAnalyticsPath(value: string, redactSegments: boolean): string {
+  const path = stripQueryAndHash(value);
+  if (!redactSegments) return path;
+  return path
+    .split("/")
+    .map((segment) =>
+      shouldRedactPathSegment(segment) ? ":redacted" : segment,
+    )
+    .join("/");
+}
+
+function shouldRedactPathSegment(segment: string): boolean {
+  if (!segment) return false;
+  const decoded = safeDecodeURIComponent(segment);
+  return (
+    decoded.includes("@") ||
+    decoded.length > 64 ||
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      decoded,
+    ) ||
+    /^[0-9a-f]{16,}$/i.test(decoded) ||
+    /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.?[A-Za-z0-9_-]*$/.test(decoded) ||
+    /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z0-9_-]{20,}$/.test(decoded)
+  );
+}
+
+function safeDecodeURIComponent(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+function parseHostname(value: string): string | null {
+  try {
+    return new URL(value).hostname || null;
+  } catch {
+    return null;
+  }
+}
+
+function truncateAnalyticsValue(value: string, maxLength: number): string {
+  return value.length > maxLength ? value.slice(0, maxLength) : value;
 }

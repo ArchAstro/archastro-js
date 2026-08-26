@@ -3,6 +3,7 @@ import {
   AnalyticsClient,
   DEFAULT_ANONYMOUS_ID_COOKIE,
   PlatformClient,
+  safeBrowserAnalyticsProperties,
   withAnalytics,
 } from "../src/index.js";
 import { HttpClient } from "../src/runtime/http-client.js";
@@ -21,12 +22,13 @@ function mockFetch(responses: Array<{ status: number; body?: unknown }>) {
   });
 }
 
-function installDocumentCookie(seed = "") {
+function installDocumentCookie(seed = "", referrer = "") {
   let cookie = seed;
   let lastWrite = seed;
   Object.defineProperty(globalThis, "document", {
     configurable: true,
     value: {
+      referrer,
       get cookie() {
         return cookie;
       },
@@ -47,11 +49,16 @@ function installDocumentCookie(seed = "") {
   return () => lastWrite;
 }
 
-function installLocation(protocol: string, hostname: string) {
+function installLocation(
+  protocol: string,
+  hostname: string,
+  pathname = "/",
+  search = "",
+) {
   Object.defineProperty(globalThis, "window", {
     configurable: true,
     value: {
-      location: { protocol, hostname },
+      location: { protocol, hostname, pathname, search },
     },
   });
 }
@@ -286,5 +293,125 @@ describe("withAnalytics", () => {
     expect(client.analytics.getAnonymousId()).toBe("anon_custom");
     expect(lastCookieWrite()).toContain("domain=.example.com");
     expect(lastCookieWrite()).not.toContain("secure");
+  });
+});
+
+describe("safeBrowserAnalyticsProperties", () => {
+  it("keeps only bounded, non-sensitive browser context", () => {
+    installDocumentCookie(
+      "",
+      "https://search.example/results?q=secret&token=leak",
+    );
+    installLocation(
+      "https:",
+      "tryintern.dev",
+      "/signup/oauth/callback",
+      "?utm_source=newsletter&utm_medium=email&utm_campaign=spring&token=leak",
+    );
+
+    expect(safeBrowserAnalyticsProperties()).toEqual({
+      referrer: "search.example",
+      utm_source: "newsletter",
+      utm_medium: "email",
+      utm_campaign: "spring",
+    });
+  });
+
+  it("strips accidental query strings and hashes from explicit paths", () => {
+    expect(
+      safeBrowserAnalyticsProperties({
+        path: "/pricing?token=secret#continue",
+        referrer: null,
+        search: null,
+      }),
+    ).toEqual({ path: "/pricing" });
+  });
+
+  it("omits the current browser path unless explicitly enabled", () => {
+    installLocation(
+      "https:",
+      "tryintern.dev",
+      "/invite/short-code",
+      "?token=secret",
+    );
+
+    expect(safeBrowserAnalyticsProperties({ referrer: null })).toEqual({});
+  });
+
+  it("redacts token-like browser path segments when current path is enabled", () => {
+    installLocation(
+      "https:",
+      "tryintern.dev",
+      "/users/018f36c0-3d9a-7cc2-a7e9-3c7c4d91d3aa/tokens/abc123def456ghi789jkl",
+      "?token=secret",
+    );
+
+    expect(
+      safeBrowserAnalyticsProperties({
+        includeCurrentPath: true,
+        referrer: null,
+        search: null,
+      }),
+    ).toEqual({
+      path: "/users/:redacted/tokens/:redacted",
+    });
+  });
+
+  it("redacts token-like explicit path segments by default", () => {
+    expect(
+      safeBrowserAnalyticsProperties({
+        path: "/users/018f36c0-3d9a-7cc2-a7e9-3c7c4d91d3aa/tokens/abc123def456ghi789jkl",
+        referrer: null,
+        search: null,
+      }),
+    ).toEqual({
+      path: "/users/:redacted/tokens/:redacted",
+    });
+  });
+
+  it("lets callers pass an already-safe route pattern", () => {
+    expect(
+      safeBrowserAnalyticsProperties({
+        path: "/users/:userId/tokens/:tokenId",
+        redactPathSegments: false,
+        referrer: null,
+        search: null,
+      }),
+    ).toEqual({
+      path: "/users/:userId/tokens/:tokenId",
+    });
+  });
+
+  it("omits malformed referrers instead of sending raw fallback values", () => {
+    expect(
+      safeBrowserAnalyticsProperties({
+        path: null,
+        referrer: "not a url with token=secret",
+        search: null,
+      }),
+    ).toEqual({});
+  });
+
+  it("supports caller-owned query allowlists and truncates values", () => {
+    expect(
+      safeBrowserAnalyticsProperties({
+        path: null,
+        referrer: "https://docs.example/path?token=secret",
+        search: new URLSearchParams({
+          utm_source: "newsletter",
+          campaign_id: "abcdef",
+          token: "secret",
+        }),
+        allowedSearchParams: ["campaign_id"],
+        maxValueLength: 4,
+      }),
+    ).toEqual({
+      referrer: "docs",
+      campaign_id: "abcd",
+    });
+  });
+
+  it("returns empty context outside the browser", () => {
+    expect(safeBrowserAnalyticsProperties()).toEqual({});
   });
 });

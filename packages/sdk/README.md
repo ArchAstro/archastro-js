@@ -70,7 +70,11 @@ subdomain behavior as the established web SDK, tracks events through
 `POST /api/v1/i`.
 
 ```ts
-import { PlatformClient, withAnalytics } from "@archastro/sdk";
+import {
+  PlatformClient,
+  safeBrowserAnalyticsProperties,
+  withAnalytics,
+} from "@archastro/sdk";
 
 const AnalyticsPlatformClient = PlatformClient.extend(withAnalytics());
 const client = new AnalyticsPlatformClient({
@@ -78,15 +82,31 @@ const client = new AnalyticsPlatformClient({
   defaultHeaders: { "x-archastro-api-key": publishableKey },
 });
 
-await client.analytics.track("page_view", { source: "landing" }, {
-  keepalive: true,
-});
+await client.analytics.track(
+  "page_view",
+  {
+    ...safeBrowserAnalyticsProperties({ path: "/landing" }),
+    source: "landing",
+  },
+  { keepalive: true },
+);
 
 const anonymousId = client.analytics.getAnonymousId();
 if (anonymousId) {
   await client.analytics.linkIdentity(anonymousId, user.id);
 }
 ```
+
+`safeBrowserAnalyticsProperties()` emits reduced browser context that is safe to
+attach to event properties: the referrer hostname instead of the full referrer
+URL and allowlisted UTM query values. It does not include
+`window.location.pathname` by default because route segments can contain invite
+codes, customer IDs, or other secrets. Pass a classified route template or
+static path as `path`; token-like path segments are still redacted unless the
+caller passes an already-safe template with `redactPathSegments: false`. Custom
+event properties remain caller-owned; do not pass raw URLs, tokens, form values,
+or user-authored content unless the receiving product has explicitly classified
+that property as safe for analytics.
 
 ## React Native / Expo
 
