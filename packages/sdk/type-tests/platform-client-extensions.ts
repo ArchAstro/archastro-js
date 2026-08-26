@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import {
   PlatformClient,
+  withAnalytics,
   parseEffectiveAccess,
   type EffectiveAccess,
   type ParsedEffectiveAccess,
@@ -20,7 +21,8 @@ const withDiagnostics = <TBase extends PlatformClientConstructor>(Base: TBase) =
 const RealtimePlatformClient = PlatformClient.extend(
   withCustomObjectSubscriptions,
 );
-const ExtendedPlatformClient = RealtimePlatformClient.extend(withDiagnostics);
+const AnalyticsPlatformClient = RealtimePlatformClient.extend(withAnalytics());
+const ExtendedPlatformClient = AnalyticsPlatformClient.extend(withDiagnostics);
 
 const constructed = new ExtendedPlatformClient({
   credentials: "include",
@@ -28,14 +30,17 @@ const constructed = new ExtendedPlatformClient({
 });
 constructed.custom_objects;
 constructed.customObjectSubscriptions;
+constructed.analytics;
 constructed.diagnosticLabel();
 
 const tokenClient = ExtendedPlatformClient.withToken("pk_test", "at_test");
 tokenClient.customObjectSubscriptions;
+tokenClient.analytics;
 tokenClient.diagnosticLabel();
 
 const secretClient = ExtendedPlatformClient.withSecretKey("sk_test");
 secretClient.customObjectSubscriptions;
+secretClient.analytics;
 secretClient.diagnosticLabel();
 
 const credentialsClient = ExtendedPlatformClient.withCredentials(
@@ -45,6 +50,7 @@ const credentialsClient = ExtendedPlatformClient.withCredentials(
 );
 credentialsClient.then((client) => {
   client.customObjectSubscriptions;
+  client.analytics;
   client.diagnosticLabel();
 });
 
@@ -58,6 +64,7 @@ const appClient = ExtendedPlatformClient.forApp({
 });
 appClient.restore;
 appClient.customObjectSubscriptions;
+appClient.analytics;
 appClient.diagnosticLabel();
 
 const DiagramFields = z.object({

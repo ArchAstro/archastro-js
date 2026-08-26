@@ -103,10 +103,11 @@ export class HttpClient {
       headers?: Record<string, string>;
       query?: Record<string, QueryValue>;
       signal?: AbortSignal;
+      keepalive?: boolean;
     } = {}
   ): Promise<T> {
     const doFetch = (): Promise<Response> => {
-      const { method = "GET", body, headers = {}, query, signal } = options;
+      const { method = "GET", body, headers = {}, query, signal, keepalive } = options;
       const token = this.getToken();
 
       let url = `${this.config.baseUrl}${this.transformPath(path)}`;
@@ -115,6 +116,7 @@ export class HttpClient {
       const fetchOptions: RequestInit = {
         method,
         signal,
+        keepalive,
         credentials: this.config.credentials,
         headers: {
           ...(this.config.defaultHeaders || {}),

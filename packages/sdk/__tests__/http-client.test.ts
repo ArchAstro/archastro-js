@@ -95,6 +95,27 @@ describe("HttpClient 401 auto-refresh", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it("passes keepalive through to fetch", async () => {
+    const fetchMock = mockFetch([{ status: 200, body: { ok: true } }]);
+    vi.stubGlobal("fetch", fetchMock);
+
+    const client = new HttpClient({
+      baseUrl: "https://api.test",
+      accessToken: "some-token",
+    });
+
+    await client.request("/api/v1/t", {
+      method: "POST",
+      body: { events: [] },
+      keepalive: true,
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.test/api/v1/t",
+      expect.objectContaining({ keepalive: true }),
+    );
+  });
+
   it("does not retry auth paths (prevents recursion from refresh client)", async () => {
     const fetchMock = mockFetch([
       { status: 401, body: { error: "unauthenticated", message: "expired" } },
