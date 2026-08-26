@@ -106,10 +106,14 @@ export class AnalyticsClient {
     events: AnalyticsEvent[],
     options: TrackEventsOptions = {},
   ): Promise<void> {
+    const anonymousId =
+      options.anonymousId === undefined
+        ? this.getAnonymousId()
+        : options.anonymousId;
     const body: Record<string, unknown> = { events };
     if (options.properties) body.properties = options.properties;
     if (options.userId) body.user = options.userId;
-    if (options.anonymousId) body.anonymous = options.anonymousId;
+    if (anonymousId) body.anonymous = anonymousId;
 
     await this.http.request("/api/v1/t", {
       method: "POST",
@@ -165,7 +169,12 @@ export class AnalyticsClient {
       .map((part) => part.trim())
       .find((part) => part.startsWith(prefix))
       ?.slice(prefix.length);
-    return value ? decodeURIComponent(value) : null;
+    if (!value) return null;
+    try {
+      return decodeURIComponent(value);
+    } catch {
+      return null;
+    }
   }
 
   private writeCookie(value: string): void {

@@ -117,6 +117,21 @@ describe("AnalyticsClient", () => {
     );
   });
 
+  it("replaces malformed anonymous id cookies", () => {
+    const lastCookieWrite = installDocumentCookie(
+      `${DEFAULT_ANONYMOUS_ID_COOKIE}=%E0%A4%A`,
+    );
+    vi.stubGlobal("crypto", { randomUUID: () => "anon_recovered" });
+    const analytics = new AnalyticsClient(
+      new HttpClient({ baseUrl: "https://api.test" }),
+    );
+
+    expect(analytics.getAnonymousId()).toBe("anon_recovered");
+    expect(lastCookieWrite()).toContain(
+      `${DEFAULT_ANONYMOUS_ID_COOKIE}=anon_recovered`,
+    );
+  });
+
   it("does not set secure or domain attributes for local HTTP cookies", () => {
     const lastCookieWrite = installDocumentCookie();
     installLocation("http:", "127.0.0.1");
@@ -164,6 +179,59 @@ describe("AnalyticsClient", () => {
       properties: { first_landing_page: "/" },
       anonymous: "anon_abc",
     });
+  });
+
+  it("tracks event batches with the SDK-owned anonymous id by default", async () => {
+    installDocumentCookie(`${DEFAULT_ANONYMOUS_ID_COOKIE}=anon_batch`);
+    const fetchMock = mockFetch([{ status: 202, body: { ok: true } }]);
+    vi.stubGlobal("fetch", fetchMock);
+    const analytics = new AnalyticsClient(
+      new HttpClient({
+        baseUrl: "https://api.test",
+        defaultHeaders: { "x-archastro-api-key": "pk_test" },
+      }),
+    );
+
+    await analytics.trackEvents([
+      {
+        event_id: "evt_123",
+        event_name: "page_view",
+        timestamp: "2026-08-26T20:00:00.000Z",
+      },
+    ]);
+
+    const [, request] = fetchMock.mock.calls[0];
+    expect(JSON.parse((request as RequestInit).body as string)).toMatchObject({
+      anonymous: "anon_batch",
+    });
+  });
+
+  it("allows callers to explicitly omit anonymous attribution", async () => {
+    installDocumentCookie(`${DEFAULT_ANONYMOUS_ID_COOKIE}=anon_batch`);
+    const fetchMock = mockFetch([{ status: 202, body: { ok: true } }]);
+    vi.stubGlobal("fetch", fetchMock);
+    const analytics = new AnalyticsClient(
+      new HttpClient({
+        baseUrl: "https://api.test",
+        defaultHeaders: { "x-archastro-api-key": "pk_test" },
+      }),
+    );
+
+    await analytics.trackEvents(
+      [
+        {
+          event_id: "evt_123",
+          event_name: "page_view",
+          timestamp: "2026-08-26T20:00:00.000Z",
+        },
+      ],
+      { anonymousId: null },
+    );
+
+    const [, request] = fetchMock.mock.calls[0];
+    expect(JSON.parse((request as RequestInit).body as string)).not.toHaveProperty(
+      "anonymous",
+    );
   });
 
   it("links an anonymous id to an authenticated user", async () => {
