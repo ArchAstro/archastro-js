@@ -1,9 +1,11 @@
 import type { HttpClient } from "./runtime/http-client.js";
 
+/** @internal Shared first-party ArchAstro app analytics plumbing. */
 export const DEFAULT_ANONYMOUS_ID_COOKIE = "aa_anon_id";
 
 const DEFAULT_COOKIE_MAX_AGE_DAYS = 365;
 
+/** @internal Shared first-party ArchAstro app analytics plumbing. */
 export interface AnalyticsClientOptions {
   anonymousIdCookieName?: string;
   cookieDomain?: string;
@@ -13,6 +15,7 @@ export interface AnalyticsClientOptions {
   secureCookie?: boolean | "auto";
 }
 
+/** @internal Shared first-party ArchAstro app analytics plumbing. */
 export interface AnalyticsTrackOptions {
   anonymousId?: string | null;
   userId?: string;
@@ -22,6 +25,7 @@ export interface AnalyticsTrackOptions {
   keepalive?: boolean;
 }
 
+/** @internal Shared first-party ArchAstro app analytics plumbing. */
 export interface AnalyticsEvent {
   event_id: string;
   event_name: string;
@@ -31,6 +35,7 @@ export interface AnalyticsEvent {
   thread?: string;
 }
 
+/** @internal Shared first-party ArchAstro app analytics plumbing. */
 export interface TrackEventsOptions {
   anonymousId?: string | null;
   userId?: string;
@@ -38,6 +43,7 @@ export interface TrackEventsOptions {
   keepalive?: boolean;
 }
 
+/** @internal Shared first-party ArchAstro app analytics plumbing. */
 export interface SafeBrowserAnalyticsPropertiesOptions {
   allowedSearchParams?: readonly string[];
   maxValueLength?: number;
@@ -54,6 +60,7 @@ const DEFAULT_BROWSER_ANALYTICS_SEARCH_PARAMS = [
   "utm_campaign",
 ] as const;
 
+/** @internal Shared first-party ArchAstro app analytics plumbing. */
 export class AnalyticsClient {
   private anonymousId: string | null = null;
   private readonly cookieName: string;
@@ -232,6 +239,7 @@ export class AnalyticsClient {
   }
 }
 
+/** @internal Shared first-party ArchAstro app analytics plumbing. */
 export function createAnalyticsClient(
   http: HttpClient,
   options?: AnalyticsClientOptions,
@@ -239,6 +247,7 @@ export function createAnalyticsClient(
   return new AnalyticsClient(http, options);
 }
 
+/** @internal Shared first-party ArchAstro app analytics plumbing. */
 export function safeBrowserAnalyticsProperties(
   options: SafeBrowserAnalyticsPropertiesOptions = {},
 ): Record<string, string> {
@@ -281,6 +290,7 @@ export function safeBrowserAnalyticsProperties(
 
 type AnalyticsBase = new (...args: any[]) => { http: HttpClient };
 
+/** @internal Shared first-party ArchAstro app analytics plumbing. */
 export function withAnalytics(
   optionsOrFactory?:
     | AnalyticsClientOptions
@@ -289,6 +299,7 @@ export function withAnalytics(
   Base: TBase,
 ) => ReturnType<typeof addAnalytics<TBase>>;
 
+/** @internal Shared first-party ArchAstro app analytics plumbing. */
 export function withAnalytics(
   optionsOrFactory?:
     | AnalyticsClientOptions
