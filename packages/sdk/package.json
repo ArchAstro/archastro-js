@@ -1,6 +1,6 @@
 {
   "name": "@archastro/sdk",
-  "version": "0.16.2",
+  "version": "0.16.3",
   "description": "TypeScript SDK for the ArchAstro Platform API (Node, browser, React Native)",
   "type": "module",
   "main": "dist/index.js",
