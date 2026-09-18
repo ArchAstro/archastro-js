@@ -91,7 +91,7 @@ const parsedAccess: ParsedEffectiveAccess = parseEffectiveAccess({
     value: true,
     provided_by: ["organization"],
   }],
-  billing: [{ principal_type: "org", administrator: false }],
+  billing: [{ principal_type: "org", administrator: false, trials: [] }],
 });
 const parsedEntitlement: ParsedEffectiveAccessEntitlement | undefined =
   parsedAccess.entitlements[0];
@@ -108,7 +108,7 @@ const wireAccess: EffectiveAccess = {
     value: true,
     provided_by: ["organization"],
   }],
-  billing: [{ principal_type: "org", administrator: false }],
+  billing: [{ principal_type: "org", administrator: false, trials: [] }],
 };
 void wireAccess;
 
