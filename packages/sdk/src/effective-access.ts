@@ -1,6 +1,9 @@
 import { z } from "zod";
 
-import type { EffectiveAccessBillingPrincipal } from "./types/common.js";
+import {
+  effectiveAccessBillingPrincipalSchema,
+  type EffectiveAccessBillingPrincipal,
+} from "./types/common.js";
 
 export type EffectiveAccessSource = "personal" | "organization";
 
@@ -46,14 +49,9 @@ const entitlementWireSchema = z.object({
   provided_by: z.array(z.enum(["personal", "organization"])),
 }).passthrough();
 
-const billingPrincipalSchema = z.object({
-  principal_type: z.enum(["user", "org"]),
-  administrator: z.boolean(),
-}).passthrough();
-
 const effectiveAccessWireSchema = z.object({
   entitlements: z.array(entitlementWireSchema),
-  billing: z.array(billingPrincipalSchema),
+  billing: z.array(effectiveAccessBillingPrincipalSchema),
 }).passthrough();
 
 const booleanValueSchema = z.boolean().nullable().optional();

@@ -37,8 +37,8 @@ describe("effective access", () => {
         evaluation_version: 2,
       }],
       billing: [
-        { principal_type: "user", administrator: true },
-        { principal_type: "org", administrator: false },
+        { principal_type: "user", administrator: true, trials: [] },
+        { principal_type: "org", administrator: false, trials: [] },
       ],
       quota_summaries: [{ key: "reviews", remaining: 4 }],
     });
@@ -62,7 +62,7 @@ describe("effective access", () => {
         provided_by: ["personal"],
         merge_policy: "highest",
       }],
-      billing: [{ principal_type: "user", administrator: true }],
+      billing: [{ principal_type: "user", administrator: true, trials: [] }],
     });
 
     expect(parsed.entitlements[0]).toEqual({
@@ -85,7 +85,7 @@ describe("effective access", () => {
         value: "yes",
         provided_by: ["personal"],
       }],
-      billing: [{ principal_type: "user", administrator: true }],
+      billing: [{ principal_type: "user", administrator: true, trials: [] }],
     })).toThrow(z.ZodError);
   });
 
